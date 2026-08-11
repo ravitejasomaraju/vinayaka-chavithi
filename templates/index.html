@@ -1,0 +1,1936 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+          content="Vinayaka Chavithi Management System - Pooja timings, donations and festival information">
+
+    <title>🕉️ Vinayaka Chavithi</title>
+
+
+    <style>
+        .amount-link {
+    display: inline-block;
+    text-decoration: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.amount-link:hover {
+    transform: translateY(-2px);
+    background: #ff9800;
+    color: white;
+}
+/* =================================================
+   IMPROVED UPI DONATION
+================================================= */
+
+.upi-section {
+    background:
+        linear-gradient(
+            135deg,
+            #fff3e0,
+            #ffe0b2
+        );
+}
+
+
+.upi-box {
+    max-width: 850px;
+    margin: auto;
+
+    background: white;
+
+    padding: 40px 30px;
+
+    border-radius: 20px;
+
+    text-align: center;
+
+    box-shadow:
+        0 8px 30px
+        rgba(0, 0, 0, 0.12);
+}
+
+
+.upi-icon {
+    font-size: 55px;
+
+    margin-bottom: 8px;
+}
+
+
+.upi-box h2 {
+    color: #e65100;
+
+    font-size: 32px;
+
+    margin-bottom: 10px;
+}
+
+
+.upi-intro {
+    color: #666;
+
+    max-width: 600px;
+
+    margin: 0 auto 25px;
+}
+
+
+.qr-wrapper {
+    display: flex;
+
+    justify-content: center;
+
+    margin: 20px 0;
+}
+
+
+.qr-image {
+    width: 280px;
+    height: 280px;
+
+    max-width: 85vw;
+
+    object-fit: contain;
+
+    background: white;
+
+    padding: 10px;
+
+    border-radius: 15px;
+
+    border: 3px solid #ff9800;
+
+    box-shadow:
+        0 5px 20px
+        rgba(0, 0, 0, 0.15);
+}
+
+
+.scan-title {
+    color: #333;
+
+    margin-top: 15px;
+
+    margin-bottom: 5px;
+}
+
+
+.scan-text {
+    color: #777;
+
+    margin-bottom: 20px;
+}
+
+
+.upi-id-box {
+    max-width: 500px;
+
+    margin: 20px auto;
+
+    padding: 15px;
+
+    background: #fff8ef;
+
+    border-radius: 10px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    flex-wrap: wrap;
+}
+
+
+.upi-id-box span {
+    color: #777;
+
+    font-size: 14px;
+}
+
+
+.upi-id-box strong {
+    color: #e65100;
+
+    font-size: 18px;
+}
+
+
+.copy-btn {
+    border: none;
+
+    background: #ff9800;
+
+    color: white;
+
+    padding: 8px 14px;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+    font-weight: bold;
+}
+
+
+.copy-btn:hover {
+    background: #f57c00;
+}
+
+
+.open-upi-btn {
+    display: inline-block;
+
+    text-decoration: none;
+
+    background: #2e7d32;
+
+    color: white;
+
+    padding: 13px 24px;
+
+    border-radius: 8px;
+
+    font-weight: bold;
+
+    margin: 5px;
+}
+
+
+.open-upi-btn:hover {
+    background: #1b5e20;
+}
+
+
+.amount-section {
+    margin-top: 30px;
+}
+
+
+.amount-section h3 {
+    color: #e65100;
+
+    margin-bottom: 15px;
+}
+
+
+.amount-buttons {
+    display: flex;
+
+    justify-content: center;
+
+    gap: 10px;
+
+    flex-wrap: wrap;
+}
+
+
+.amount {
+    background: #fff3e0;
+
+    color: #e65100;
+
+    padding: 10px 18px;
+
+    border-radius: 20px;
+
+    font-weight: bold;
+
+    border: 1px solid #ffcc80;
+}
+
+
+.donation-instructions {
+    max-width: 600px;
+
+    margin: 30px auto 0;
+
+    text-align: left;
+
+    background: #fafafa;
+
+    padding: 22px;
+
+    border-radius: 12px;
+}
+
+
+.donation-instructions h3 {
+    text-align: center;
+
+    color: #e65100;
+
+    margin-bottom: 12px;
+}
+
+
+.donation-instructions ol {
+    padding-left: 25px;
+
+    color: #555;
+}
+
+
+.donation-instructions li {
+    margin-bottom: 8px;
+}
+
+
+.thank-you {
+    margin-top: 25px;
+
+    color: #795548;
+
+    line-height: 1.8;
+}
+
+
+@media (max-width: 600px) {
+
+    .upi-box {
+        padding: 30px 18px;
+    }
+
+
+    .upi-box h2 {
+        font-size: 27px;
+    }
+
+
+    .qr-image {
+        width: 240px;
+        height: 240px;
+    }
+
+
+    .upi-id-box {
+        flex-direction: column;
+    }
+
+
+    .open-upi-btn {
+        width: 100%;
+
+        max-width: 300px;
+    }
+
+}
+```
+
+/* =================================================
+   UPI DONATION
+================================================= */
+
+.upi-section {
+    background: linear-gradient(
+        135deg,
+        #fff3e0,
+        #ffe0b2
+    );
+}
+
+.upi-box {
+    max-width: 850px;
+    margin: auto;
+    background: white;
+    padding: 35px;
+    border-radius: 18px;
+    text-align: center;
+
+    box-shadow:
+        0 7px 25px
+        rgba(0, 0, 0, 0.10);
+}
+
+.upi-box h2 {
+    color: #e65100;
+    margin-bottom: 10px;
+}
+
+.upi-box p {
+    color: #666;
+}
+
+.qr-image {
+    width: 260px;
+    max-width: 80%;
+    margin: 20px auto;
+    display: block;
+
+    border: 5px solid #fff;
+    border-radius: 12px;
+
+    box-shadow:
+        0 4px 15px
+        rgba(0, 0, 0, 0.15);
+}
+
+.upi-id {
+    display: inline-block;
+
+    background: #fff8ef;
+
+    padding: 12px 20px;
+
+    border-radius: 8px;
+
+    margin: 10px 0 20px;
+
+    color: #e65100;
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.amount-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.amount {
+    background: #f5f5f5;
+    color: #e65100;
+
+    padding: 10px 18px;
+
+    border-radius: 8px;
+
+    font-weight: bold;
+}
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+
+        body {
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #fff8ef;
+            color: #333;
+            line-height: 1.6;
+        }
+
+
+        /* =================================================
+           NAVIGATION
+        ================================================= */
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+
+            background:
+                rgba(255, 255, 255, 0.97);
+
+            box-shadow:
+                0 2px 12px
+                rgba(0, 0, 0, 0.10);
+        }
+
+
+        .nav-container {
+            max-width: 1200px;
+            width: 92%;
+            margin: auto;
+
+            min-height: 70px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+
+        .logo {
+            text-decoration: none;
+            color: #e65100;
+
+            font-size: 20px;
+            font-weight: bold;
+
+            white-space: nowrap;
+        }
+
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+
+        .nav-links a {
+            text-decoration: none;
+            color: #555;
+
+            padding: 9px 13px;
+
+            border-radius: 7px;
+
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+
+        .nav-links a:hover {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+
+        .login-btn {
+            background: #ff9800 !important;
+            color: white !important;
+        }
+
+
+        .login-btn:hover {
+            background: #f57c00 !important;
+        }
+
+
+        /* =================================================
+           HERO
+        ================================================= */
+
+        .hero {
+            min-height: 560px;
+
+            display: flex;
+            align-items: center;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff3e0 0%,
+                    #ffe0b2 50%,
+                    #ffcc80 100%
+                );
+
+            position: relative;
+            overflow: hidden;
+        }
+
+
+        .hero::before {
+            content: "🕉️";
+
+            position: absolute;
+
+            font-size: 260px;
+
+            right: -40px;
+            bottom: -70px;
+
+            opacity: 0.07;
+        }
+
+
+        .hero-container {
+            max-width: 1200px;
+            width: 92%;
+            margin: auto;
+
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+
+            gap: 40px;
+
+            align-items: center;
+        }
+
+
+        .hero-content {
+            padding: 35px 0;
+        }
+
+
+        .small-title {
+            display: inline-block;
+
+            background: #fff;
+            color: #e65100;
+
+            padding: 7px 14px;
+
+            border-radius: 20px;
+
+            font-size: 14px;
+            font-weight: bold;
+
+            margin-bottom: 18px;
+
+            box-shadow:
+                0 3px 10px
+                rgba(0, 0, 0, 0.08);
+        }
+
+
+        .hero h1 {
+            font-size: clamp(38px, 6vw, 68px);
+
+            color: #bf360c;
+
+            line-height: 1.1;
+
+            margin-bottom: 18px;
+        }
+
+
+        .hero h1 span {
+            color: #e65100;
+        }
+
+
+        .hero-text {
+            font-size: 18px;
+            color: #5d4037;
+
+            max-width: 650px;
+
+            margin-bottom: 25px;
+        }
+
+
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+
+        .btn {
+            display: inline-block;
+
+            text-decoration: none;
+
+            padding: 13px 21px;
+
+            border-radius: 8px;
+
+            font-weight: bold;
+
+            transition:
+                transform 0.2s,
+                box-shadow 0.2s;
+        }
+
+
+        .btn:hover {
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 5px 15px
+                rgba(0, 0, 0, 0.15);
+        }
+
+
+        .primary-btn {
+            background: #e65100;
+            color: white;
+        }
+
+
+        .secondary-btn {
+            background: white;
+            color: #e65100;
+
+            border: 2px solid #e65100;
+        }
+
+
+        /* =================================================
+           HERO FESTIVAL CARD
+        ================================================= */
+
+        .festival-card {
+            background: white;
+
+            padding: 30px;
+
+            border-radius: 20px;
+
+            text-align: center;
+
+            box-shadow:
+                0 12px 35px
+                rgba(0, 0, 0, 0.12);
+        }
+
+
+        .ganesha {
+            font-size: 90px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .festival-card h2 {
+            color: #e65100;
+
+            margin-bottom: 10px;
+        }
+
+
+        .festival-date {
+            font-size: 22px;
+
+            font-weight: bold;
+
+            color: #bf360c;
+
+            margin-bottom: 10px;
+        }
+
+
+        .festival-card p {
+            color: #666;
+        }
+
+
+        /* =================================================
+           SECTIONS
+        ================================================= */
+
+        .section {
+            padding: 70px 0;
+        }
+
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+
+        .section-title {
+            text-align: center;
+
+            color: #e65100;
+
+            font-size: 32px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .section-subtitle {
+            text-align: center;
+
+            color: #777;
+
+            max-width: 700px;
+
+            margin:
+                0 auto 35px;
+        }
+
+
+        /* =================================================
+           NEXT POOJA
+        ================================================= */
+
+        .next-pooja {
+            background: white;
+
+            border-radius: 16px;
+
+            padding: 30px;
+
+            max-width: 800px;
+
+            margin: auto;
+
+            box-shadow:
+                0 5px 20px
+                rgba(0, 0, 0, 0.09);
+
+            border-top:
+                5px solid #ff9800;
+        }
+
+
+        .next-label {
+            display: inline-block;
+
+            background: #fff3e0;
+
+            color: #e65100;
+
+            padding: 6px 12px;
+
+            border-radius: 20px;
+
+            font-size: 13px;
+
+            font-weight: bold;
+
+            margin-bottom: 12px;
+        }
+
+
+        .next-pooja h3 {
+            color: #333;
+
+            font-size: 25px;
+
+            margin-bottom: 12px;
+        }
+
+
+        .pooja-info {
+            display: flex;
+
+            gap: 20px;
+
+            flex-wrap: wrap;
+
+            margin: 15px 0;
+        }
+
+
+        .info-item {
+            background: #f9f9f9;
+
+            padding: 12px 16px;
+
+            border-radius: 8px;
+
+            color: #555;
+        }
+
+
+        .info-item strong {
+            color: #e65100;
+        }
+
+
+        .pooja-description {
+            color: #666;
+
+            margin-top: 12px;
+        }
+
+
+        .empty-pooja {
+            text-align: center;
+
+            color: #777;
+
+            padding: 20px;
+        }
+
+
+        /* =================================================
+           FEATURE CARDS
+        ================================================= */
+
+        .cards {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 22px;
+        }
+
+
+        .card {
+            background: white;
+
+            padding: 28px;
+
+            border-radius: 14px;
+
+            text-align: center;
+
+            box-shadow:
+                0 4px 15px
+                rgba(0, 0, 0, 0.08);
+
+            transition:
+                transform 0.2s,
+                box-shadow 0.2s;
+        }
+
+
+        .card:hover {
+            transform: translateY(-5px);
+
+            box-shadow:
+                0 8px 22px
+                rgba(0, 0, 0, 0.12);
+        }
+
+
+        .card-icon {
+            font-size: 45px;
+
+            margin-bottom: 12px;
+        }
+
+
+        .card h3 {
+            color: #e65100;
+
+            margin-bottom: 10px;
+        }
+
+
+        .card p {
+            color: #666;
+
+            margin-bottom: 18px;
+        }
+
+
+        .card-link {
+            color: #e65100;
+
+            text-decoration: none;
+
+            font-weight: bold;
+        }
+
+
+        .card-link:hover {
+            text-decoration: underline;
+        }
+
+
+        /* =================================================
+           DONATION
+        ================================================= */
+
+        .donation-section {
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff3e0,
+                    #ffe0b2
+                );
+        }
+
+
+        .donation-box {
+            max-width: 900px;
+
+            margin: auto;
+
+            background: white;
+
+            padding: 35px;
+
+            border-radius: 18px;
+
+            text-align: center;
+
+            box-shadow:
+                0 7px 25px
+                rgba(0, 0, 0, 0.10);
+        }
+
+
+        .donation-box h2 {
+            color: #e65100;
+
+            margin-bottom: 10px;
+        }
+
+
+        .donation-box p {
+            color: #666;
+
+            margin-bottom: 20px;
+        }
+
+
+        .donation-note {
+            background: #fff8ef;
+
+            border-radius: 8px;
+
+            padding: 14px;
+
+            color: #795548;
+
+            margin-bottom: 20px;
+        }
+
+
+        /* =================================================
+           ABOUT
+        ================================================= */
+
+        .about {
+            max-width: 900px;
+
+            margin: auto;
+
+            text-align: center;
+        }
+
+
+        .about p {
+            color: #666;
+
+            font-size: 17px;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* =================================================
+           FOOTER
+        ================================================= */
+
+        footer {
+            background: #3e2723;
+
+            color: white;
+
+            padding: 40px 0 20px;
+        }
+
+
+        .footer-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 30px;
+
+            margin-bottom: 30px;
+        }
+
+
+        footer h3 {
+            color: #ffb74d;
+
+            margin-bottom: 10px;
+        }
+
+
+        footer p {
+            color: #ddd;
+        }
+
+
+        .footer-links {
+            list-style: none;
+        }
+
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+
+        .footer-links a {
+            color: #ddd;
+
+            text-decoration: none;
+        }
+
+
+        .footer-links a:hover {
+            color: #ffb74d;
+        }
+
+
+        .copyright {
+            border-top:
+                1px solid
+                rgba(255,255,255,0.15);
+
+            padding-top: 18px;
+
+            text-align: center;
+
+            color: #bbb;
+
+            font-size: 14px;
+        }
+
+
+        /* =================================================
+           MOBILE
+        ================================================= */
+
+        @media (max-width: 850px) {
+
+            .nav-container {
+                padding: 12px 0;
+
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+
+            .nav-links {
+                justify-content: center;
+            }
+
+
+            .hero-container {
+                grid-template-columns: 1fr;
+
+                text-align: center;
+            }
+
+
+            .hero-buttons {
+                justify-content: center;
+            }
+
+
+            .festival-card {
+                max-width: 500px;
+
+                margin: auto;
+            }
+
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+
+                text-align: center;
+            }
+
+        }
+
+
+        @media (max-width: 500px) {
+
+            .hero {
+                min-height: auto;
+            }
+
+
+            .hero-content {
+                padding: 50px 0;
+            }
+
+
+            .hero h1 {
+                font-size: 40px;
+            }
+
+
+            .hero-text {
+                font-size: 16px;
+            }
+
+
+            .festival-card {
+                padding: 22px;
+            }
+
+
+            .ganesha {
+                font-size: 70px;
+            }
+
+
+            .section {
+                padding: 50px 0;
+            }
+
+
+            .section-title {
+                font-size: 27px;
+            }
+
+
+            .pooja-info {
+                flex-direction: column;
+
+                gap: 10px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVIGATION
+===================================================== -->
+
+<nav>
+
+    <div class="nav-container">
+
+        <a
+            href="/"
+            class="logo"
+        >
+            🕉️ Vinayaka Chavithi
+        </a>
+
+
+        <div class="nav-links">
+
+            <a href="/">
+                Home
+            </a>
+
+            <a href="/pooja-timings">
+                🪔 Pooja Timings
+            </a>
+
+            <a href="/login"
+               class="login-btn">
+                🔐 Login
+            </a>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="hero">
+
+    <div class="hero-container">
+
+
+        <div class="hero-content">
+
+            <span class="small-title">
+                🙏 Welcome to Our Festival
+            </span>
+
+
+            <h1>
+
+                Happy
+                <span>
+                    Vinayaka Chavithi
+                </span>
+
+            </h1>
+
+
+            <p class="hero-text">
+
+                Join us in celebrating Lord Ganesha
+                with devotion, happiness and togetherness.
+                Find pooja timings, festival information
+                and donation details in one place.
+
+            </p>
+
+
+            <div class="hero-buttons">
+
+                <a
+                    href="/pooja-timings"
+                    class="btn primary-btn"
+                >
+                    🪔 View Pooja Timings
+                </a>
+
+
+                <a
+                    href="/login"
+                    class="btn secondary-btn"
+                >
+                    🔐 Login
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="festival-card">
+
+            <div class="ganesha">
+                🙏
+            </div>
+
+
+            <h2>
+                🕉️ Sri Ganeshaya Namah
+            </h2>
+
+
+            <div class="festival-date">
+                14 September 2026
+            </div>
+
+
+            <p>
+                May Lord Ganesha bless everyone
+                with happiness, health, wisdom
+                and prosperity.
+            </p>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     NEXT POOJA
+===================================================== -->
+
+<section class="section">
+
+    <div class="container">
+
+        <h2 class="section-title">
+            🪔 Upcoming Pooja
+        </h2>
+
+
+        <p class="section-subtitle">
+
+            Check the next scheduled pooja.
+            Timings are updated by the admin.
+
+        </p>
+
+
+        {% if timings %}
+
+            {% set next_timing = timings[0] %}
+
+            <div class="next-pooja">
+
+                <span class="next-label">
+                    📅 Next Scheduled Pooja
+                </span>
+
+
+                <h3>
+                    🕉️ {{ next_timing[1] }}
+                </h3>
+
+
+                <div class="pooja-info">
+
+                    <div class="info-item">
+
+                        📅
+
+                        <strong>
+                            Date:
+                        </strong>
+
+                        {{ next_timing[2] }}
+
+                    </div>
+
+
+                    <div class="info-item">
+
+                        ⏰
+
+                        <strong>
+                            Time:
+                        </strong>
+
+                        {{ next_timing[3] }}
+
+                        {% if next_timing[4] %}
+                            - {{ next_timing[4] }}
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                {% if next_timing[5] %}
+
+                <p class="pooja-description">
+
+                    {{ next_timing[5] }}
+
+                </p>
+
+                {% endif %}
+
+
+                <a
+                    href="/pooja-timings"
+                    class="btn primary-btn"
+                >
+                    View All Pooja Timings →
+                </a>
+
+            </div>
+
+
+        {% else %}
+
+            <div class="next-pooja">
+
+                <div class="empty-pooja">
+
+                    <div style="font-size: 50px;">
+                        🪔
+                    </div>
+
+                    <h3>
+                        Pooja Timings Coming Soon
+                    </h3>
+
+                    <p>
+                        The pooja schedule will be
+                        updated here when it is ready.
+                    </p>
+
+                    <br>
+
+                    <a
+                        href="/pooja-timings"
+                        class="btn primary-btn"
+                    >
+                        View Pooja Schedule
+                    </a>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     FEATURES
+===================================================== -->
+
+<section class="section"
+         style="background: #ffffff;">
+
+    <div class="container">
+
+        <h2 class="section-title">
+            🌺 Festival Information
+        </h2>
+
+
+        <p class="section-subtitle">
+
+            Everything you need for our
+            Vinayaka Chavithi celebration.
+
+        </p>
+
+
+        <div class="cards">
+
+
+            <!-- POOJA -->
+
+            <div class="card">
+
+                <div class="card-icon">
+                    🪔
+                </div>
+
+                <h3>
+                    Pooja Timings
+                </h3>
+
+                <p>
+
+                    View the latest pooja schedule,
+                    dates and timings.
+
+                </p>
+
+                <a
+                    href="/pooja-timings"
+                    class="card-link"
+                >
+                    View Timings →
+                </a>
+
+            </div>
+
+
+            <!-- DONATION -->
+
+            <div class="card">
+
+                <div class="card-icon">
+                    💰
+                </div>
+
+                <h3>
+                    Donations
+                </h3>
+
+                <p>
+
+                    Support the Vinayaka Chavithi
+                    celebrations through your contribution.
+
+                </p>
+
+                <a
+                    href="/login"
+                    class="card-link"
+                >
+                    Login to Continue →
+                </a>
+
+            </div>
+
+
+            <!-- MEMBERS -->
+
+            <div class="card">
+
+                <div class="card-icon">
+                    👥
+                </div>
+
+                <h3>
+                    Youth Members
+                </h3>
+
+                <p>
+
+                    Registered youth members can
+                    login and manage their donations.
+
+                </p>
+
+                <a
+                    href="/login"
+                    class="card-link"
+                >
+                    Member Login →
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     DONATION SECTION
+===================================================== -->
+
+<section class="section donation-section">
+
+    <div class="container">
+
+        <div class="donation-box">
+
+            <div style="font-size: 55px;">
+                🙏
+            </div>
+
+
+            <h2>
+                Support Vinayaka Chavithi
+            </h2>
+
+
+            <p>
+
+                Your contribution helps us organize
+                pooja, cultural programs and festival
+                activities for our community.
+
+            </p>
+
+
+            <div class="donation-note">
+
+                💡 Donations can be collected by
+                registered youth members.
+
+            </div>
+
+
+            <a
+                href="/login"
+                class="btn primary-btn"
+            >
+                💰 Donation Login
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- =====================================================
+     IMPROVED UPI DONATION
+===================================================== -->
+
+<section class="section upi-section">
+
+    <div class="container">
+
+        <div class="upi-box">
+
+            <div class="upi-icon">
+                📱
+            </div>
+
+            <h2>
+                Donate Through UPI
+            </h2>
+
+            <p class="upi-intro">
+                Support our Vinayaka Chavithi celebrations
+                by making a quick and secure UPI donation.
+            </p>
+
+
+            <!-- QR CODE -->
+
+            <div class="qr-wrapper">
+
+                <img
+                    src="{{ url_for('static', filename='upi_qr.png') }}"
+                    alt="Vinayaka Chavithi UPI QR Code"
+                    class="qr-image"
+                >
+
+            </div>
+
+
+            <h3 class="scan-title">
+                📷 Scan & Pay
+            </h3>
+
+            <p class="scan-text">
+                Open any UPI app and scan the QR code above.
+            </p>
+
+
+            <!-- UPI ID -->
+
+            <div class="upi-id-box">
+
+                <span>
+                    UPI ID
+                </span>
+
+                <strong id="upiId">
+                    9603283195@ybl
+                </strong>
+
+                <button
+                    type="button"
+                    class="copy-btn"
+                    onclick="copyUPI()"
+                >
+                    📋 Copy
+                </button>
+
+            </div>
+
+
+            <!-- OPEN UPI -->
+
+            <a
+    href="upi://pay?pa=9603283195%40ybl&pn=Vinayaka%20Chavithi&cu=INR"
+    class="open-upi-btn">
+    📲 Open UPI App
+</a>
+
+
+            <!-- SUGGESTED AMOUNTS -->
+
+<div class="amount-section">
+
+    <h3>💰 Select Donation Amount</h3>
+
+    <div class="amount-buttons">
+
+
+        <a
+            href="upi://pay?pa=9603283195%40ybl&pn=Vinayaka%20Chavithi&am=101&cu=INR"
+            class="amount amount-link">
+            ₹101
+        </a>
+
+        <a
+            href="upi://pay?pa=9603283195%40ybl&pn=Vinayaka%20Chavithi&am=501&cu=INR"
+            class="amount amount-link">
+            ₹501
+        </a>
+
+        <a
+            href="upi://pay?pa=9603283195%40ybl&pn=Vinayaka%20Chavithi&am=1001&cu=INR"
+            class="amount amount-link">
+            ₹1,001
+        </a>
+
+        <a
+            href="upi://pay?pa=9603283195%40ybl&pn=Vinayaka%20Chavithi&am=2001&cu=INR"
+            class="amount amount-link">
+            ₹2,001
+        </a>
+
+    </div>
+
+</div>
+
+            <div class="thank-you">
+
+                🙏 Thank you for supporting
+                Vinayaka Chavithi!
+
+                <br>
+
+                <strong>
+                    Ganapati Bappa Morya 🙏
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script>
+
+function copyUPI() {
+
+    const upi =
+        document.getElementById("upiId").innerText;
+
+    navigator.clipboard.writeText(upi)
+        .then(function () {
+
+            alert(
+                "UPI ID copied: " + upi
+            );
+
+        })
+        .catch(function () {
+
+            alert(
+                "Please copy the UPI ID manually."
+            );
+
+        });
+
+}
+
+</script>
+
+
+<!-- =====================================================
+     ABOUT
+===================================================== -->
+
+<section class="section">
+
+    <div class="container">
+
+        <div class="about">
+
+            <h2 class="section-title">
+                🙏 About Our Celebration
+            </h2>
+
+
+            <p>
+
+                Vinayaka Chavithi is a festival
+                celebrated with devotion and joy
+                to worship Lord Ganesha.
+
+            </p>
+
+
+            <p>
+
+                Our community comes together to
+                celebrate the festival, perform
+                pooja and organize cultural activities.
+
+            </p>
+
+
+            <p>
+
+                May Lord Ganesha remove all obstacles
+                and bless everyone with peace,
+                prosperity and success.
+
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     FOOTER
+===================================================== -->
+
+<footer>
+
+    <div class="container">
+
+        <div class="footer-grid">
+
+
+            <div>
+
+                <h3>
+                    🕉️ Vinayaka Chavithi
+                </h3>
+
+                <p>
+
+                    Vinayaka Chavithi Management System
+
+                    for managing festival activities,
+                    members, donations and pooja timings.
+
+                </p>
+
+            </div>
+
+
+            <div>
+
+                <h3>
+                    Quick Links
+                </h3>
+
+
+                <ul class="footer-links">
+
+                    <li>
+                        <a href="/">
+                            Home
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="/pooja-timings">
+                            Pooja Timings
+                        </a>
+                    </li>
+
+                    <li>
+                        <a href="/login">
+                            Login
+                        </a>
+                    </li>
+
+                </ul>
+
+            </div>
+
+
+            <div>
+
+                <h3>
+                    Festival
+                </h3>
+
+                <p>
+                    📅 14 September 2026
+                </p>
+
+                <p>
+                    🪔 Pooja timings will be
+                    updated by the admin.
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="copyright">
+
+            © 2026 Vinayaka Chavithi Management System
+
+            <br>
+
+            🙏 Ganapati Bappa Morya 🙏
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>

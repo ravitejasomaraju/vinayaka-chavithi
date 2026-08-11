@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Collect Donation - Vinayaka Chavithi</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: #ff6f00;
+            color: white;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #444;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 16px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #ff6f00;
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 25px;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            background: #ff6f00;
+            color: white;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #e65100;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #ff6f00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 7px;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 7px;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 15px auto;
+                padding: 12px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>🕉️ Vinayaka Chavithi</h1>
+    </div>
+
+    <div class="container">
+
+        <div class="card">
+
+            <h2>💰 Collect Donation</h2>
+
+            {% if message %}
+                <div class="message">
+                    {{ message }}
+                </div>
+            {% endif %}
+
+            {% if error %}
+                <div class="error">
+                    {{ error }}
+                </div>
+            {% endif %}
+
+            <form method="POST"
+                  action="{{ url_for('collect_donation') }}">
+
+                <label for="donor_name">
+                    Donor Name
+                </label>
+
+                <input
+                    type="text"
+                    id="donor_name"
+                    name="donor_name"
+                    placeholder="Enter donor name"
+                    required
+                >
+
+                <label for="phone">
+                    Donor Phone
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="Enter phone number"
+                    maxlength="15"
+                >
+
+                <label for="amount">
+                    Donation Amount (₹)
+                </label>
+
+                <input
+                    type="number"
+                    id="amount"
+                    name="amount"
+                    placeholder="Enter amount"
+                    min="1"
+                    step="0.01"
+                    required
+                >
+
+                <label for="payment_method">
+                    Payment Method
+                </label>
+
+                <select
+                    id="payment_method"
+                    name="payment_method"
+                    required
+                >
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                </select>
+
+                <label for="payment_status">
+                    Payment Status
+                </label>
+
+                <select
+                    id="payment_status"
+                    name="payment_status"
+                    required
+                >
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                </select>
+
+                <button type="submit" class="btn">
+                    Save Donation
+                </button>
+
+            </form>
+
+            <a
+                href="{{ url_for('member') }}"
+                class="back"
+            >
+                ← Back to Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
