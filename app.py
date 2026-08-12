@@ -1,6 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, session
-from werkzeug.security import check_password_hash, generate_password_hash
+import os
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session
+)
+
+from werkzeug.security import (
+    check_password_hash,
+    generate_password_hash
+)
+
 from database import get_connection
+
 
 app = Flask(__name__)
 
@@ -8,7 +23,10 @@ app = Flask(__name__)
 # FLASK SECRET KEY
 # ==========================================================
 
-app.secret_key = "vinayaka-chavithi-secret-key-2026"
+app.secret_key = os.environ.get(
+    "SECRET_KEY",
+    "development-secret-key"
+)
 
 
 # ==========================================================
@@ -45,6 +63,7 @@ def home():
 
     except Exception as e:
         print("HOME ERROR:", e)
+
         return render_template(
             "index.html",
             timings=[]
@@ -53,6 +72,7 @@ def home():
     finally:
         if conn:
             conn.close()
+
 
 # ==========================================================
 # LOGIN
@@ -101,8 +121,10 @@ def login():
             password_hash = user[2]
             role = user[3]
 
-            if not check_password_hash(password_hash, password):
-
+            if not check_password_hash(
+                password_hash,
+                password
+            ):
                 return render_template(
                     "login.html",
                     error="Invalid phone number or password."
@@ -272,12 +294,15 @@ def admin_members():
             )
 
             if not name:
+
                 error = "Member name is required."
 
             elif not phone:
+
                 error = "Phone number is required."
 
             elif not password:
+
                 error = "Password is required."
 
             else:
@@ -454,7 +479,6 @@ def member():
 
 # ==========================================================
 # DONATIONS
-# Both URLs work:
 # /donations
 # /collect-donation
 # ==========================================================
@@ -623,7 +647,6 @@ def donations():
 
 # ==========================================================
 # ADMIN POOJA TIMINGS
-# ADD + VIEW
 # ==========================================================
 
 @app.route(
@@ -729,7 +752,7 @@ def admin_pooja_timings():
                 )
 
         # --------------------------------------------------
-        # GET SAVED POOJA TIMINGS
+        # GET POOJA TIMINGS
         # --------------------------------------------------
 
         with conn.cursor() as cur:
@@ -898,7 +921,7 @@ def logout():
 if __name__ == "__main__":
 
     app.run(
-    host="0.0.0.0",
-    port=5000,
-    debug=True
-)
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000)),
+        debug=False
+    )
