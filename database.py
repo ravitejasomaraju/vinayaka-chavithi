@@ -5,9 +5,13 @@ import psycopg
 def get_connection():
     database_url = os.environ.get("DATABASE_URL")
 
-    if not database_url:
-        raise RuntimeError(
-            "DATABASE_URL environment variable is not set"
-        )
+    if database_url:
+        return psycopg.connect(database_url)
 
-    return psycopg.connect(database_url)
+    return psycopg.connect(
+        host="localhost",
+        port=5432,
+        dbname="vinayaka_chavithi",
+        user="postgres",
+        password="1811"
+    )

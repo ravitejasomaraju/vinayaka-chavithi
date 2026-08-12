@@ -20,7 +20,7 @@ from database import get_connection
 app = Flask(__name__)
 
 # ==========================================================
-# FLASK SECRET KEY
+# SECRET KEY
 # ==========================================================
 
 app.secret_key = os.environ.get(
@@ -62,6 +62,7 @@ def home():
         )
 
     except Exception as e:
+
         print("HOME ERROR:", e)
 
         return render_template(
@@ -70,6 +71,7 @@ def home():
         )
 
     finally:
+
         if conn:
             conn.close()
 
@@ -83,10 +85,18 @@ def login():
 
     if request.method == "POST":
 
-        phone = request.form.get("phone", "").strip()
-        password = request.form.get("password", "")
+        phone = request.form.get(
+            "phone",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
 
         if not phone or not password:
+
             return render_template(
                 "login.html",
                 error="Phone number and password are required."
@@ -95,13 +105,18 @@ def login():
         conn = None
 
         try:
+
             conn = get_connection()
 
             with conn.cursor() as cur:
 
                 cur.execute(
                     """
-                    SELECT id, name, password, role
+                    SELECT
+                        id,
+                        name,
+                        password,
+                        role
                     FROM users
                     WHERE phone = %s
                     """,
@@ -111,6 +126,7 @@ def login():
                 user = cur.fetchone()
 
             if user is None:
+
                 return render_template(
                     "login.html",
                     error="Invalid phone number or password."
@@ -125,6 +141,7 @@ def login():
                 password_hash,
                 password
             ):
+
                 return render_template(
                     "login.html",
                     error="Invalid phone number or password."
@@ -137,10 +154,16 @@ def login():
             session["role"] = role
 
             if role == "admin":
-                return redirect(url_for("admin"))
+
+                return redirect(
+                    url_for("admin")
+                )
 
             if role == "member":
-                return redirect(url_for("member"))
+
+                return redirect(
+                    url_for("member")
+                )
 
             session.clear()
 
@@ -188,44 +211,36 @@ def admin():
         with conn.cursor() as cur:
 
             # Total users
-            cur.execute(
-                """
+            cur.execute("""
                 SELECT COUNT(*)
                 FROM users
-                """
-            )
+            """)
 
             total_users = cur.fetchone()[0]
 
             # Total members
-            cur.execute(
-                """
+            cur.execute("""
                 SELECT COUNT(*)
                 FROM users
                 WHERE role = 'member'
-                """
-            )
+            """)
 
             total_members = cur.fetchone()[0]
 
             # Total donations
-            cur.execute(
-                """
+            cur.execute("""
                 SELECT COALESCE(SUM(amount), 0)
                 FROM donations
                 WHERE payment_status = 'Paid'
-                """
-            )
+            """)
 
             total_donations = cur.fetchone()[0]
 
             # Total programs
-            cur.execute(
-                """
+            cur.execute("""
                 SELECT COUNT(*)
                 FROM programs
-                """
-            )
+            """)
 
             total_programs = cur.fetchone()[0]
 
@@ -254,7 +269,10 @@ def admin():
 # ADMIN MEMBERS
 # ==========================================================
 
-@app.route("/admin/members", methods=["GET", "POST"])
+@app.route(
+    "/admin/members",
+    methods=["GET", "POST"]
+)
 def admin_members():
 
     if "user_id" not in session:
@@ -273,7 +291,7 @@ def admin_members():
         conn = get_connection()
 
         # --------------------------------------------------
-        # ADD YOUTH MEMBER
+        # ADD MEMBER
         # --------------------------------------------------
 
         if request.method == "POST":
@@ -369,8 +387,7 @@ def admin_members():
 
         with conn.cursor() as cur:
 
-            cur.execute(
-                """
+            cur.execute("""
                 SELECT
                     id,
                     name,
@@ -379,8 +396,7 @@ def admin_members():
                     created_at
                 FROM users
                 ORDER BY id DESC
-                """
-            )
+            """)
 
             members = cur.fetchall()
 
@@ -396,9 +412,15 @@ def admin_members():
         if conn:
             conn.rollback()
 
-        print("ADMIN MEMBERS ERROR:", e)
+        print(
+            "ADMIN MEMBERS ERROR:",
+            e
+        )
 
-        return "Admin members error: " + str(e)
+        return (
+            "Admin members error: "
+            + str(e)
+        )
 
     finally:
 
@@ -467,9 +489,15 @@ def member():
 
     except Exception as e:
 
-        print("MEMBER ERROR:", e)
+        print(
+            "MEMBER ERROR:",
+            e
+        )
 
-        return "Member dashboard error: " + str(e)
+        return (
+            "Member dashboard error: "
+            + str(e)
+        )
 
     finally:
 
@@ -479,8 +507,6 @@ def member():
 
 # ==========================================================
 # DONATIONS
-# /donations
-# /collect-donation
 # ==========================================================
 
 @app.route(
@@ -496,7 +522,10 @@ def donations():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    if session.get("role") not in ["admin", "member"]:
+    if session.get("role") not in [
+        "admin",
+        "member"
+    ]:
         return redirect(url_for("login"))
 
     message = None
@@ -584,7 +613,9 @@ def donations():
 
                 conn.commit()
 
-                message = "Donation added successfully!"
+                message = (
+                    "Donation added successfully!"
+                )
 
         # --------------------------------------------------
         # GET DONATIONS
@@ -635,9 +666,15 @@ def donations():
         if conn:
             conn.rollback()
 
-        print("DONATION ERROR:", e)
+        print(
+            "DONATION ERROR:",
+            e
+        )
 
-        return "Donation error: " + str(e)
+        return (
+            "Donation error: "
+            + str(e)
+        )
 
     finally:
 
@@ -740,8 +777,12 @@ def admin_pooja_timings():
                             pooja_name,
                             pooja_date,
                             start_time,
-                            end_time if end_time else None,
-                            description if description else None
+                            end_time
+                            if end_time
+                            else None,
+                            description
+                            if description
+                            else None
                         )
                     )
 
@@ -752,7 +793,7 @@ def admin_pooja_timings():
                 )
 
         # --------------------------------------------------
-        # GET POOJA TIMINGS
+        # GET TIMINGS
         # --------------------------------------------------
 
         with conn.cursor() as cur:
@@ -787,9 +828,15 @@ def admin_pooja_timings():
         if conn:
             conn.rollback()
 
-        print("POOJA TIMINGS ERROR:", e)
+        print(
+            "POOJA TIMINGS ERROR:",
+            e
+        )
 
-        return "Pooja timings error: " + str(e)
+        return (
+            "Pooja timings error: "
+            + str(e)
+        )
 
     finally:
 
@@ -832,7 +879,9 @@ def delete_pooja_timing(timing_id):
         conn.commit()
 
         return redirect(
-            url_for("admin_pooja_timings")
+            url_for(
+                "admin_pooja_timings"
+            )
         )
 
     except Exception as e:
@@ -840,9 +889,15 @@ def delete_pooja_timing(timing_id):
         if conn:
             conn.rollback()
 
-        print("DELETE POOJA ERROR:", e)
+        print(
+            "DELETE POOJA ERROR:",
+            e
+        )
 
-        return "Delete pooja timing error: " + str(e)
+        return (
+            "Delete pooja timing error: "
+            + str(e)
+        )
 
     finally:
 
@@ -890,9 +945,15 @@ def public_pooja_timings():
 
     except Exception as e:
 
-        print("PUBLIC POOJA ERROR:", e)
+        print(
+            "PUBLIC POOJA ERROR:",
+            e
+        )
 
-        return "Pooja timings error: " + str(e)
+        return (
+            "Pooja timings error: "
+            + str(e)
+        )
 
     finally:
 
@@ -915,13 +976,20 @@ def logout():
 
 
 # ==========================================================
-# RUN FLASK
+# RUN APPLICATION
 # ==========================================================
 
 if __name__ == "__main__":
 
+    port = int(
+        os.environ.get(
+            "PORT",
+            5000
+        )
+    )
+
     app.run(
         host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
+        port=port,
         debug=False
     )
