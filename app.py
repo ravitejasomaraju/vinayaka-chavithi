@@ -429,6 +429,95 @@ def admin_members():
 
 
 # ==========================================================
+# DELETE / REMOVE MEMBER
+# ==========================================================
+
+@app.route("/admin/delete-member/<int:user_id>", methods=["POST"])
+def delete_member(user_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        return "Unauthorized", 403
+
+    # Never allow the logged-in admin to delete itself
+    if user_id == session.get("user_id"):
+        return "Admin account cannot be deleted.", 403
+
+    conn = None
+
+    try:
+        conn = get_connection()
+
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT id, name, role
+                FROM users
+                WHERE id = %s
+                """,
+                (user_id,)
+            )
+
+            user = cur.fetchone()
+
+            if not user:
+                return "Member not found.", 404
+
+            if user[2] == "admin":
+                return "Admin account cannot be deleted.", 403
+
+            # Preserve donation history.
+            cur.execute(
+                """
+                SELECT COUNT(*)
+                FROM donations
+                WHERE collected_by = %s
+                """,
+                (user_id,)
+            )
+
+            donation_count = cur.fetchone()[0]
+
+            if donation_count > 0:
+                return (
+                    "This member cannot be removed because donation "
+                    "records are linked to this member. "
+                    "This protects your donation history.",
+                    400
+                )
+
+            cur.execute(
+                """
+                DELETE FROM users
+                WHERE id = %s
+                  AND role = 'member'
+                """,
+                (user_id,)
+            )
+
+        conn.commit()
+
+        return redirect(url_for("admin_members"))
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("DELETE MEMBER ERROR:", e)
+
+        return "Unable to remove member: " + str(e), 500
+
+    finally:
+
+        if conn:
+            conn.close()
+
+
+# ==========================================================
 # MEMBER DASHBOARD
 # ==========================================================
 
