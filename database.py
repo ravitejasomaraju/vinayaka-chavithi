@@ -8,6 +8,7 @@ def get_connection():
     if database_url:
         return psycopg.connect(database_url)
 
+    # Local PostgreSQL fallback
     return psycopg.connect(
         host="localhost",
         port=5432,
