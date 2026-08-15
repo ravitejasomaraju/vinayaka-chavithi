@@ -3,10 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donations - Vinayaka Chavithi</title>
+
+    <title>Collect Donation</title>
 
     <style>
-        * { box-sizing: border-box; }
+        * {
+            box-sizing: border-box;
+        }
 
         body {
             margin: 0;
@@ -17,91 +20,69 @@
         .header {
             background: #ff6f00;
             color: white;
-            padding: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 { margin: 0; }
-
-        .back {
-            background: white;
-            color: #ff6f00;
-            text-decoration: none;
-            padding: 10px 16px;
-            border-radius: 6px;
-            font-weight: bold;
+            padding: 18px;
+            text-align: center;
         }
 
         .container {
-            width: 95%;
-            max-width: 1200px;
+            width: 94%;
+            max-width: 700px;
             margin: 25px auto;
         }
 
         .card {
             background: white;
-            padding: 22px;
-            margin-bottom: 22px;
-            border-radius: 10px;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,.1);
         }
 
-        .total {
-            font-size: 28px;
+        h2 {
+            color: #e65100;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
             font-weight: bold;
-            color: #ff6f00;
         }
 
-        .table-container {
-            overflow-x: auto;
-        }
-
-        table {
+        input,
+        select {
             width: 100%;
-            min-width: 900px;
-            border-collapse: collapse;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
         }
 
-        th {
+        button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
             background: #ff6f00;
             color: white;
-            padding: 12px;
-            text-align: left;
-        }
-
-        td {
-            padding: 11px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        tr:hover {
-            background: #fafafa;
-        }
-
-        .edit-btn,
-        .delete-btn {
-            display: inline-block;
-            border: none;
-            border-radius: 5px;
-            padding: 8px 12px;
-            cursor: pointer;
-            text-decoration: none;
+            font-size: 17px;
             font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #e65100;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 18px;
+            background: #555;
             color: white;
-        }
-
-        .edit-btn {
-            background: #1976d2;
-        }
-
-        .delete-btn {
-            background: #d32f2f;
-        }
-
-        .delete-form {
-            display: inline;
+            text-decoration: none;
+            border-radius: 6px;
         }
 
         .success {
@@ -109,6 +90,7 @@
             color: #155724;
             padding: 12px;
             border-radius: 6px;
+            margin-bottom: 15px;
         }
 
         .error {
@@ -116,17 +98,24 @@
             color: #721c24;
             padding: 12px;
             border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .info {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
         }
 
         @media (max-width: 600px) {
-            .header {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-
             .container {
                 width: 96%;
+            }
+
+            .card {
+                padding: 18px;
             }
         }
     </style>
@@ -135,98 +124,117 @@
 <body>
 
 <div class="header">
-    <h1>💰 Donations</h1>
-
-    <a href="{{ url_for('admin') }}" class="back">
-        Admin Dashboard
-    </a>
+    <h1>💰 Collect Donation</h1>
 </div>
 
 <div class="container">
 
-    {% if message %}
-        <div class="card">
-            <div class="success">{{ message }}</div>
-        </div>
-    {% endif %}
-
-    {% if error %}
-        <div class="card">
-            <div class="error">{{ error }}</div>
-        </div>
-    {% endif %}
-
     <div class="card">
-        <h2>Total Paid Collection</h2>
-        <div class="total">₹ {{ "%.2f"|format(total_collection|float) }}</div>
-    </div>
 
-    <div class="card">
-        <h2>Donation Records</h2>
-
-        {% if donations %}
-
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Donor</th>
-                        <th>Phone</th>
-                        <th>Amount</th>
-                        <th>Payment Method</th>
-                        <th>Status</th>
-                        <th>Collected By</th>
-                        <th>Date</th>
-
-                        {% if session.get("role") == "admin" %}
-                            <th>Actions</th>
-                        {% endif %}
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for donation in donations %}
-                    <tr>
-                        <td>{{ donation[0] }}</td>
-                        <td>{{ donation[1] }}</td>
-                        <td>{{ donation[2] }}</td>
-                        <td>₹ {{ "%.2f"|format(donation[3]|float) }}</td>
-                        <td>{{ donation[4] }}</td>
-                        <td>{{ donation[5] }}</td>
-                        <td>{{ donation[7] or "Unknown" }}</td>
-                        <td>{{ donation[6] }}</td>
-
-                        {% if session.get("role") == "admin" %}
-                        <td>
-                            <a
-                                href="{{ url_for('edit_donation', donation_id=donation[0]) }}"
-                                class="edit-btn">
-                                Edit
-                            </a>
-
-                            <form
-    method="POST"
-    action="{{ url_for('delete_donation', donation_id=donation[0]) }}"
-    onsubmit="return confirm('Are you sure you want to delete this donation?');"
-    style="display:inline;">
-
-    <button type="submit" class="delete-btn">
-        Delete
-    </button>
-
-</form>
-                        </td>
-                        {% endif %}
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {% else %}
-            <p>No donation records found.</p>
+        {% if message %}
+            <div class="success">
+                {{ message }}
+            </div>
         {% endif %}
+
+        {% if error %}
+            <div class="error">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        <div class="info">
+            Logged in as:
+            <strong>{{ session.get("name") }}</strong>
+        </div>
+
+        <!-- IMPORTANT: POST goes to the donations endpoint -->
+        <form method="POST" action="{{ url_for('donations') }}">
+
+            <label for="donor_name">
+                Donor Name
+            </label>
+
+            <input
+                type="text"
+                id="donor_name"
+                name="donor_name"
+                placeholder="Enter donor name"
+                required
+            >
+
+
+            <label for="phone">
+                Donor Phone
+            </label>
+
+            <input
+                type="text"
+                id="phone"
+                name="phone"
+                placeholder="Enter donor phone number"
+                maxlength="15"
+            >
+
+
+            <label for="amount">
+                Donation Amount
+            </label>
+
+            <input
+                type="number"
+                id="amount"
+                name="amount"
+                placeholder="Enter amount"
+                min="0.01"
+                step="0.01"
+                required
+            >
+
+
+            <label for="payment_method">
+                Payment Method
+            </label>
+
+            <select
+                id="payment_method"
+                name="payment_method"
+                required
+            >
+                <option value="Cash">Cash</option>
+                <option value="UPI">UPI</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="Other">Other</option>
+            </select>
+
+
+            <label for="payment_status">
+                Payment Status
+            </label>
+
+            <select
+                id="payment_status"
+                name="payment_status"
+                required
+            >
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Cancelled">Cancelled</option>
+            </select>
+
+
+            <button type="submit">
+                💰 Save Donation
+            </button>
+
+        </form>
+
+        <a
+            href="{{ url_for('member') }}"
+            class="back">
+            ← Back to Member Dashboard
+        </a>
+
     </div>
 
 </div>
