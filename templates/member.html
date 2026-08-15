@@ -1,11 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Youth Member Dashboard</title>
+    <title>Member Dashboard - Vinayaka Chavithi</title>
 
     <style>
         * {
@@ -14,17 +13,23 @@
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             background: #f5f5f5;
             color: #333;
         }
 
-        /* HEADER */
+        /* =========================
+           HEADER
+        ========================== */
+
         .header {
-            background: #ff6f00;
+            background: linear-gradient(135deg, #ff6f00, #e65100);
             color: white;
             padding: 20px;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
         }
 
         .header h1 {
@@ -32,39 +37,56 @@
             font-size: 25px;
         }
 
-        .header p {
-            margin: 7px 0 0;
-            font-size: 15px;
+        .logout-btn {
+            background: white;
+            color: #e65100;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 7px;
+            font-weight: bold;
         }
 
-        /* MAIN CONTAINER */
+        .logout-btn:hover {
+            background: #ffe0b2;
+        }
+
+        /* =========================
+           MAIN CONTAINER
+        ========================== */
+
         .container {
-            max-width: 1100px;
+            width: 94%;
+            max-width: 1200px;
             margin: 25px auto;
-            padding: 15px;
         }
 
-        /* WELCOME */
+        /* =========================
+           WELCOME
+        ========================== */
+
         .welcome {
             background: white;
-            padding: 20px;
+            padding: 22px;
             border-radius: 12px;
             margin-bottom: 20px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .welcome h2 {
-            margin: 0;
-            color: #333;
+            margin-top: 0;
+            color: #e65100;
         }
 
         .welcome p {
             margin-bottom: 0;
-            color: #666;
+            color: #555;
         }
 
-        /* SUMMARY CARDS */
-        .summary {
+        /* =========================
+           SUMMARY CARDS
+        ========================== */
+
+        .cards {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
@@ -75,126 +97,143 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
-        }
-
-        .card .icon {
-            font-size: 35px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
         .card h3 {
-            margin: 10px 0 5px;
-            font-size: 16px;
+            margin-top: 0;
             color: #666;
         }
 
-        .card .value {
-            font-size: 28px;
+        .amount {
+            font-size: 30px;
             font-weight: bold;
-            color: #ff6f00;
+            color: #e65100;
         }
 
-        /* BUTTONS */
-        .actions {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
+        .count {
+            font-size: 30px;
+            font-weight: bold;
+            color: #1976d2;
+        }
+
+        /* =========================
+           COLLECT DONATION BUTTON
+        ========================== */
+
+        .action-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
             margin-bottom: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            text-align: center;
         }
 
-        .dashboard-btn {
-            display: block;
-            padding: 15px;
-            text-align: center;
-            text-decoration: none;
+        .action-card h2 {
+            margin-top: 0;
+            color: #e65100;
+        }
+
+        .collect-btn {
+            display: inline-block;
             background: #ff6f00;
             color: white;
-            border-radius: 8px;
+            text-decoration: none;
+            padding: 13px 25px;
+            border-radius: 7px;
+            font-size: 17px;
             font-weight: bold;
-            transition: 0.2s;
         }
 
-        .dashboard-btn:hover {
+        .collect-btn:hover {
             background: #e65100;
         }
 
-        .logout-btn {
-            background: #555;
-        }
+        /* =========================
+           DONATION TABLE
+        ========================== */
 
-        .logout-btn:hover {
-            background: #333;
-        }
-
-        /* DONATIONS */
-        .donations-card {
+        .table-card {
             background: white;
-            padding: 20px;
+            padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.10);
-            overflow-x: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        .donations-card h2 {
+        .table-card h2 {
             margin-top: 0;
+            color: #e65100;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
+            min-width: 850px;
             border-collapse: collapse;
-            min-width: 700px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
         }
 
         th {
             background: #ff6f00;
             color: white;
+            padding: 12px;
+            text-align: left;
+        }
+
+        td {
+            padding: 11px;
+            border-bottom: 1px solid #ddd;
         }
 
         tr:hover {
-            background: #fafafa;
+            background: #fff8f2;
         }
 
         .paid {
-            color: green;
+            color: #2e7d32;
             font-weight: bold;
         }
 
         .pending {
-            color: #d97706;
+            color: #f57c00;
+            font-weight: bold;
+        }
+
+        .cancelled {
+            color: #c62828;
             font-weight: bold;
         }
 
         .no-data {
             text-align: center;
-            padding: 30px;
+            padding: 25px;
             color: #777;
         }
 
-        /* FOOTER */
+        /* =========================
+           FOOTER
+        ========================== */
+
         .footer {
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             color: #777;
             font-size: 14px;
         }
 
-        /* MOBILE */
+        /* =========================
+           MOBILE
+        ========================== */
+
         @media (max-width: 700px) {
 
-            .summary {
-                grid-template-columns: 1fr;
-            }
-
-            .actions {
-                grid-template-columns: 1fr;
+            .header {
+                flex-direction: column;
+                text-align: center;
             }
 
             .header h1 {
@@ -202,12 +241,27 @@
             }
 
             .container {
-                margin: 15px auto;
-                padding: 10px;
+                width: 96%;
             }
 
-            .card {
-                padding: 20px;
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .card,
+            .table-card,
+            .action-card,
+            .welcome {
+                padding: 18px;
+            }
+
+            .amount,
+            .count {
+                font-size: 25px;
+            }
+
+            .collect-btn {
+                width: 100%;
             }
         }
     </style>
@@ -215,62 +269,63 @@
 
 <body>
 
-    <!-- HEADER -->
+    <!-- =========================
+         HEADER
+    ========================== -->
+
     <div class="header">
-        <h1>🕉️ Vinayaka Chavithi</h1>
-        <p>Youth Member Dashboard</p>
+
+        <h1>🙏 Vinayaka Chavithi - Member Dashboard</h1>
+
+        <a href="{{ url_for('logout') }}" class="logout-btn">
+            Logout
+        </a>
+
     </div>
 
 
     <div class="container">
 
-        <!-- WELCOME -->
+        <!-- =========================
+             WELCOME
+        ========================== -->
+
         <div class="welcome">
 
             <h2>
-                Welcome, {{ name }} 👋
+                Welcome, {{ name }}! 🙏
             </h2>
 
             <p>
-                Manage your donation collection from this dashboard.
+                You are logged in as a Youth Member.
+                You can collect and view your donation records here.
             </p>
 
         </div>
 
 
-        <!-- SUMMARY -->
-        <div class="summary">
+        <!-- =========================
+             SUMMARY
+        ========================== -->
 
-            <!-- TOTAL COLLECTION -->
+        <div class="cards">
+
             <div class="card">
 
-                <div class="icon">
-                    💰
-                </div>
+                <h3>Total Collection</h3>
 
-                <h3>
-                    My Total Collection
-                </h3>
-
-                <div class="value">
-                    ₹{{ my_total }}
+                <div class="amount">
+                    ₹ {{ "%.2f"|format(my_total|float) }}
                 </div>
 
             </div>
 
 
-            <!-- TOTAL DONATIONS -->
             <div class="card">
 
-                <div class="icon">
-                    📋
-                </div>
+                <h3>Total Donations Collected</h3>
 
-                <h3>
-                    Donations Collected
-                </h3>
-
-                <div class="value">
+                <div class="count">
                     {{ my_donations|length }}
                 </div>
 
@@ -279,128 +334,165 @@
         </div>
 
 
-        <!-- ACTION BUTTONS -->
-        <div class="actions">
+        <!-- =========================
+             COLLECT DONATION
+             IMPORTANT:
+             Uses donations endpoint,
+             NOT collect_donation
+        ========================== -->
+
+        <div class="action-card">
+
+            <h2>💰 Collect a Donation</h2>
+
+            <p>
+                Record a new donation from a donor.
+            </p>
 
             <a
-                href="{{ url_for('collect_donation') }}"
-                class="dashboard-btn"
-            >
-                💰 Collect Donation
-            </a>
+                href="{{ url_for('donations') }}"
+                class="collect-btn">
 
+                ➕ Collect Donation
 
-            <a
-                href="{{ url_for('member') }}"
-                class="dashboard-btn"
-            >
-                📋 My Donations
-            </a>
-
-
-            <a
-                href="{{ url_for('logout') }}"
-                class="dashboard-btn logout-btn"
-            >
-                🚪 Logout
             </a>
 
         </div>
 
 
-        <!-- DONATION LIST -->
-        <div class="donations-card">
+        <!-- =========================
+             MY DONATIONS
+        ========================== -->
 
-            <h2>
-                📋 My Donations
-            </h2>
+        <div class="table-card">
+
+            <h2>📋 My Donation Records</h2>
 
             {% if my_donations %}
+
+            <div class="table-container">
 
                 <table>
 
                     <thead>
 
                         <tr>
+
                             <th>ID</th>
+
                             <th>Donor Name</th>
+
                             <th>Phone</th>
+
                             <th>Amount</th>
-                            <th>Payment</th>
+
+                            <th>Payment Method</th>
+
                             <th>Status</th>
+
                             <th>Date</th>
+
                         </tr>
 
                     </thead>
 
+
                     <tbody>
 
-                        {% for donation in my_donations %}
+                    {% for donation in my_donations %}
 
-                            <tr>
+                        <tr>
 
-                                <td>
-                                    {{ donation[0] }}
-                                </td>
+                            <!-- ID -->
+                            <td>
+                                {{ donation[0] }}
+                            </td>
 
-                                <td>
-                                    {{ donation[1] }}
-                                </td>
 
-                                <td>
-                                    {{ donation[2] or '-' }}
-                                </td>
+                            <!-- Donor Name -->
+                            <td>
+                                {{ donation[1] }}
+                            </td>
 
-                                <td>
-                                    ₹{{ donation[3] }}
-                                </td>
 
-                                <td>
-                                    {{ donation[4] }}
-                                </td>
+                            <!-- Phone -->
+                            <td>
+                                {{ donation[2] }}
+                            </td>
 
-                                <td>
 
-                                    {% if donation[5] == 'Paid' %}
+                            <!-- Amount -->
+                            <td>
+                                ₹ {{ "%.2f"|format(donation[3]|float) }}
+                            </td>
 
-                                        <span class="paid">
-                                            {{ donation[5] }}
-                                        </span>
 
-                                    {% else %}
+                            <!-- Payment Method -->
+                            <td>
+                                {{ donation[4] }}
+                            </td>
 
-                                        <span class="pending">
-                                            {{ donation[5] }}
-                                        </span>
 
-                                    {% endif %}
+                            <!-- Payment Status -->
+                            <td>
 
-                                </td>
+                                {% if donation[5] == "Paid" %}
 
-                                <td>
-                                    {{ donation[6] }}
-                                </td>
+                                    <span class="paid">
+                                        {{ donation[5] }}
+                                    </span>
 
-                            </tr>
+                                {% elif donation[5] == "Pending" %}
 
-                        {% endfor %}
+                                    <span class="pending">
+                                        {{ donation[5] }}
+                                    </span>
+
+                                {% elif donation[5] == "Cancelled" %}
+
+                                    <span class="cancelled">
+                                        {{ donation[5] }}
+                                    </span>
+
+                                {% else %}
+
+                                    {{ donation[5] }}
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <!-- Date -->
+                            <td>
+                                {{ donation[6] }}
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
 
                     </tbody>
 
                 </table>
+
+            </div>
 
             {% else %}
 
                 <div class="no-data">
 
                     <p>
-                        📭 No donations collected yet.
+                        No donations collected yet.
                     </p>
 
-                    <p>
-                        Click <strong>Collect Donation</strong>
-                        to add your first donation.
-                    </p>
+                    <a
+                        href="{{ url_for('donations') }}"
+                        class="collect-btn">
+
+                        Collect Your First Donation
+
+                    </a>
 
                 </div>
 
@@ -411,14 +503,13 @@
     </div>
 
 
-    <!-- FOOTER -->
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
     <div class="footer">
 
-        🕉️ Vinayaka Chavithi Management System
-
-        <br>
-
-        Youth Member Portal
+        Vinayaka Chavithi Chanda Management System
 
     </div>
 
