@@ -629,9 +629,16 @@ def member_chat_messages():
 # ==========================================================
 @app.route("/video-conference")
 def video_conference():
-    if not is_logged_in(): return redirect(url_for("login"))
-    return render_template("video_conference.html",name=session.get("name","User"),role=session.get("role"))
 
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") not in ["admin", "member"]:
+        return redirect(url_for("login"))
+
+    return render_template(
+        "video_conference.html"
+    )
 
 # ==========================================================
 # LOGOUT

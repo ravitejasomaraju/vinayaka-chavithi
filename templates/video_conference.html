@@ -11,7 +11,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Video Conference</title>
+    <title>Google Meet - Vinayaka Chavithi</title>
 
     <style>
 
@@ -21,61 +21,115 @@
 
         body {
             margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            background:
+                linear-gradient(
+                    135deg,
+                    #fff3e0,
+                    #ffe0b2,
+                    #fff8e1
+                );
         }
 
-        .header {
-            background: linear-gradient(
-                135deg,
-                #e65100,
-                #ff9800
-            );
-
-            color: white;
-            padding: 22px;
-            text-align: center;
-        }
-
-        .header h1 {
-            margin: 0;
-        }
-
-        .container {
-            width: 95%;
-            max-width: 1100px;
-            margin: 25px auto;
-        }
-
-        .card {
+        .meet-container {
+            width: 92%;
+            max-width: 600px;
             background: white;
-            border-radius: 15px;
-            padding: 20px;
+            padding: 40px 30px;
+            border-radius: 20px;
+            text-align: center;
             box-shadow:
-                0 5px 20px rgba(0,0,0,0.12);
+                0 8px 30px rgba(0,0,0,0.15);
         }
 
-        .meeting {
-            width: 100%;
-            height: 650px;
-            border: 0;
-            border-radius: 12px;
+        .icon {
+            font-size: 65px;
+            margin-bottom: 10px;
         }
 
-        .back {
+        h1 {
+            color: #e65100;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #444;
+            margin-bottom: 15px;
+        }
+
+        .description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .btn-meet {
             display: inline-block;
-            margin-top: 20px;
-            padding: 12px 22px;
-            background: #555;
+            padding: 15px 30px;
+            background: #1a73e8;
             color: white;
             text-decoration: none;
-            border-radius: 25px;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: bold;
+            transition: 0.3s;
         }
 
-        @media(max-width:700px) {
+        .btn-meet:hover {
+            background: #1557b0;
+            transform: translateY(-2px);
+        }
 
-            .meeting {
-                height: 600px;
+        .back-btn {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 11px 22px;
+            background: #eeeeee;
+            color: #333;
+            text-decoration: none;
+            border-radius: 7px;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background: #dddddd;
+        }
+
+        .notice {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .secure {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+
+            .meet-container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+
+            h2 {
+                font-size: 20px;
+            }
+
+            .btn-meet {
+                width: 100%;
             }
 
         }
@@ -84,50 +138,90 @@
 
 </head>
 
+
 <body>
 
-    <div class="header">
+    <div class="meet-container">
 
-        <h1>🎥 Vinayaka Chavithi Video Conference</h1>
+        <div class="icon">
+            🙏
+        </div>
 
-        <p>
-            Welcome, {{ name }}
+        <h1>
+            Vinayaka Chavithi
+        </h1>
+
+        <h2>
+            🎥 Committee Video Conference
+        </h2>
+
+        <p class="description">
+
+            Join the Vinayaka Chavithi committee
+            meeting using Google Meet.
+
+            <br><br>
+
+            Admin and members can join the same
+            meeting using the meeting link.
+
         </p>
 
-    </div>
+
+        <!--
+            IMPORTANT:
+            Replace the URL below with your actual
+            Google Meet meeting link.
+
+            Example:
+            https://meet.google.com/abc-defg-hij
+        -->
+
+        <a
+            href="https://meet.google.com/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn-meet"
+        >
+            🎥 Open Google Meet
+        </a>
 
 
-    <div class="container">
+        <div class="notice">
 
-        <div class="card">
+            <span class="secure">
+                🔒 Secure Google Meet
+            </span>
 
-            <iframe
-                class="meeting"
-                src="https://meet.jit.si/VinayakaChavithiMembers2026"
-                allow="camera; microphone; fullscreen; display-capture"
-                allowfullscreen>
-            </iframe>
+            <br><br>
+
+            Google Meet will open in a new tab.
+
+            <br>
+
+            Allow microphone and camera permissions
+            when required.
 
         </div>
 
 
-        {% if role == "admin" %}
+        {% if session.get('role') == 'admin' %}
 
-        <a
-            href="{{ url_for('admin') }}"
-            class="back"
-        >
-            ← Back to Admin Dashboard
-        </a>
+            <a
+                href="{{ url_for('admin_dashboard') }}"
+                class="back-btn"
+            >
+                ← Back to Admin Dashboard
+            </a>
 
         {% else %}
 
-        <a
-            href="{{ url_for('member') }}"
-            class="back"
-        >
-            ← Back to Member Dashboard
-        </a>
+            <a
+                href="{{ url_for('member_dashboard') }}"
+                class="back-btn"
+            >
+                ← Back to Member Dashboard
+            </a>
 
         {% endif %}
 
