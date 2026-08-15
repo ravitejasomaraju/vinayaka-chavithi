@@ -39,9 +39,16 @@ def home():
         conn = get_connection()
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT id, date, time, description
-                FROM pooja_timings
-                ORDER BY date, time
+            SELECT
+    id,
+    pooja_name,
+    pooja_date,
+    start_time,
+    end_time,
+    description
+FROM pooja_timings
+ORDER BY pooja_date, start_time
+             
             """)
             timings = cur.fetchall()
             cur.execute("""
