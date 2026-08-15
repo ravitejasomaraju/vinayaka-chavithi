@@ -1148,7 +1148,225 @@ def logout():
         url_for("login")
     )
 
+# ==========================================================
+# PREVIOUS YEAR CELEBRATIONS - ADMIN
+# ==========================================================
 
+@app.route("/admin/celebrations", methods=["GET", "POST"])
+def admin_celebrations():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        return "Unauthorized", 403
+
+    conn = None
+    message = None
+    error = None
+
+    try:
+        conn = get_connection()
+
+        # ------------------------------------------
+        # ADD CELEBRATION
+        # ------------------------------------------
+        if request.method == "POST":
+
+            year = request.form.get("year", "").strip()
+            title = request.form.get("title", "").strip()
+            description = request.form.get("description", "").strip()
+            video_url = request.form.get("video_url", "").strip()
+            image_url = request.form.get("image_url", "").strip()
+
+            if not year or not title:
+                error = "Year and title are required."
+
+            elif not video_url:
+                error = "Google Drive video link is required."
+
+            else:
+
+                # Convert Google Drive sharing URL
+                # into an embeddable URL
+                if "/file/d/" in video_url:
+
+                    try:
+                        file_id = video_url.split("/file/d/")[1].split("/")[0]
+
+                        video_url = (
+                            "https://drive.google.com/file/d/"
+                            + file_id
+                            + "/preview"
+                        )
+
+                    except Exception:
+                        error = "Invalid Google Drive video link."
+
+                if not error:
+
+                    with conn.cursor() as cur:
+
+                        cur.execute("""
+                            INSERT INTO previous_celebrations
+                            (
+                                year,
+                                title,
+                                description,
+                                image_url,
+                                video_url
+                            )
+                            VALUES (%s, %s, %s, %s, %s)
+                        """, (
+                            int(year),
+                            title,
+                            description,
+                            image_url,
+                            video_url
+                        ))
+
+                    conn.commit()
+
+                    message = "Celebration added successfully."
+
+        # ------------------------------------------
+        # GET ALL CELEBRATIONS
+        # ------------------------------------------
+
+        with conn.cursor() as cur:
+
+            cur.execute("""
+                SELECT
+                    id,
+                    year,
+                    title,
+                    description,
+                    image_url,
+                    video_url,
+                    created_at
+                FROM previous_celebrations
+                ORDER BY year DESC, id DESC
+            """)
+
+            celebrations = cur.fetchall()
+
+        return render_template(
+            "admin_celebrations.html",
+            celebrations=celebrations,
+            message=message,
+            error=error
+        )
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("CELEBRATIONS ERROR:", e)
+
+        return "Celebrations error: " + str(e)
+
+    finally:
+
+        if conn:
+            conn.close()
+
+
+# ==========================================================
+# DELETE PREVIOUS CELEBRATION
+# ==========================================================
+
+@app.route(
+    "/admin/celebrations/delete/<int:celebration_id>",
+    methods=["POST"]
+)
+def delete_celebration(celebration_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        return "Unauthorized", 403
+
+    conn = None
+
+    try:
+
+        conn = get_connection()
+
+        with conn.cursor() as cur:
+
+            cur.execute("""
+                DELETE FROM previous_celebrations
+                WHERE id = %s
+            """, (celebration_id,))
+
+        conn.commit()
+
+        return redirect(
+            url_for("admin_celebrations")
+        )
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("DELETE CELEBRATION ERROR:", e)
+
+        return "Delete celebration error: " + str(e)
+
+    finally:
+
+        if conn:
+            conn.close()
+
+
+# ==========================================================
+# PUBLIC PREVIOUS CELEBRATIONS
+# ==========================================================
+
+@app.route("/previous-celebrations")
+def previous_celebrations():
+
+    conn = None
+
+    try:
+
+        conn = get_connection()
+
+        with conn.cursor() as cur:
+
+            cur.execute("""
+                SELECT
+                    id,
+                    year,
+                    title,
+                    description,
+                    image_url,
+                    video_url,
+                    created_at
+                FROM previous_celebrations
+                ORDER BY year DESC, id DESC
+            """)
+
+            celebrations = cur.fetchall()
+
+        return render_template(
+            "previous_celebrations.html",
+            celebrations=celebrations
+        )
+
+    except Exception as e:
+
+        print("PUBLIC CELEBRATIONS ERROR:", e)
+
+        return "Previous celebrations error: " + str(e)
+
+    finally:
+
+        if conn:
+            conn.close()
 # ==========================================================
 # RUN APPLICATION
 # ==========================================================
