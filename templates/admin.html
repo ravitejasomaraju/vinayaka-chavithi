@@ -472,16 +472,68 @@
                 </p>
 
                 <a
-    href="{{ google_meet_link }}"
-    target="_blank"
-    rel="noopener noreferrer"
-    class="video-btn"
->
-    🎥 Join Google Meet
-</a>
+                    href="{{ url_for('video_conference') }}"
+                    class="btn video"
+                >
+                    🎥 Join Video Conference
+                </a>
 
             </div>
 
+
+        </div>
+
+
+        <!-- GOOGLE MEET SETTINGS -->
+
+        <div class="menu-card">
+
+            <h2>🎥 Google Meet</h2>
+
+            <p>
+                Add or update the shared Google Meet link.
+                Members will automatically use the latest link.
+            </p>
+
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    {% for msg in messages %}
+                        <div style="margin:10px 0;padding:10px;border-radius:8px;background:#e8f5e9;color:#1b5e20;font-weight:bold;">
+                            {{ msg }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form action="{{ url_for('admin_google_meet') }}" method="POST">
+                <input
+                    type="url"
+                    name="meet_url"
+                    value="{{ google_meet_url or '' }}"
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    required
+                    style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:15px;margin-top:8px;"
+                >
+
+                <button
+                    type="submit"
+                    class="btn video"
+                    style="border:0;cursor:pointer;"
+                >
+                    💾 Save / Update Meet Link
+                </button>
+
+                {% if google_meet_url %}
+                    <a
+                        href="{{ google_meet_url }}"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn blue"
+                    >
+                        🔗 Test Current Meet Link
+                    </a>
+                {% endif %}
+            </form>
 
         </div>
 

@@ -39,16 +39,9 @@ def home():
         conn = get_connection()
         with conn.cursor() as cur:
             cur.execute("""
-            SELECT
-    id,
-    pooja_name,
-    pooja_date,
-    start_time,
-    end_time,
-    description
-FROM pooja_timings
-ORDER BY pooja_date, start_time
-             
+                SELECT id, date, time, description
+                FROM pooja_timings
+                ORDER BY date, time
             """)
             timings = cur.fetchall()
             cur.execute("""
@@ -174,7 +167,8 @@ def admin():
         total_members=total_members,
         total_users=total_users,
         total_donations=total_donations,
-        total_programs=total_programs
+        total_programs=total_programs,
+        google_meet_url=get_google_meet_url()
     )
 
 
@@ -632,20 +626,99 @@ def member_chat_messages():
 
 
 # ==========================================================
+# GOOGLE MEET SETTINGS
+# ==========================================================
+def get_google_meet_url():
+    """Return the shared Google Meet URL saved by the admin.
+
+    The database value is preferred. GOOGLE_MEET_URL remains as a
+    fallback so an existing Render deployment continues to work.
+    """
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS google_meet_settings (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    meet_url TEXT NOT NULL DEFAULT '',
+                    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("SELECT meet_url FROM google_meet_settings WHERE id = 1")
+            row = cur.fetchone()
+        conn.close()
+        if row and row[0]:
+            return str(row[0]).strip()
+    except Exception as e:
+        close_conn(conn)
+        print("GET GOOGLE MEET URL ERROR:", e)
+
+    return os.environ.get("GOOGLE_MEET_URL", "").strip()
+
+
+@app.route("/admin/google-meet", methods=["POST"])
+def admin_google_meet():
+    if not is_admin():
+        return redirect(url_for("admin_login"))
+
+    meet_url = request.form.get("meet_url", "").strip()
+
+    if not meet_url:
+        flash("Please enter a Google Meet link.")
+        return redirect(url_for("admin"))
+
+    if not (meet_url.startswith("https://meet.google.com/") or
+            meet_url.startswith("http://meet.google.com/")):
+        flash("Please enter a valid Google Meet URL starting with https://meet.google.com/")
+        return redirect(url_for("admin"))
+
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS google_meet_settings (
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    meet_url TEXT NOT NULL DEFAULT '',
+                    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cur.execute("""
+                INSERT INTO google_meet_settings (id, meet_url, updated_at)
+                VALUES (1, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (id) DO UPDATE SET
+                    meet_url = EXCLUDED.meet_url,
+                    updated_at = CURRENT_TIMESTAMP
+            """, (meet_url,))
+        conn.commit()
+        conn.close()
+        flash("Google Meet link updated successfully.")
+    except Exception as e:
+        close_conn(conn)
+        print("SAVE GOOGLE MEET URL ERROR:", e)
+        flash("Unable to save Google Meet link: " + str(e))
+
+    return redirect(url_for("admin"))
+
+
+# ==========================================================
 # VIDEO CONFERENCE
 # ==========================================================
 @app.route("/video-conference")
 def video_conference():
-
-    if "user_id" not in session:
+    if not is_logged_in():
         return redirect(url_for("login"))
 
-    if session.get("role") not in ["admin", "member"]:
-        return redirect(url_for("login"))
+    google_meet_url = get_google_meet_url()
 
     return render_template(
-        "video_conference.html"
+        "video_conference.html",
+        name=session.get("name", "User"),
+        role=session.get("role"),
+        google_meet_url=google_meet_url
     )
+
 
 # ==========================================================
 # LOGOUT
