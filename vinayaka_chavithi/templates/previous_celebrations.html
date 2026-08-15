@@ -1,0 +1,238 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Previous Celebrations</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+            color: #333;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #e65100, #ff9800);
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+        }
+
+        .hero h1 {
+            margin: 0;
+            font-size: 38px;
+        }
+
+        .hero p {
+            font-size: 17px;
+            margin-top: 12px;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1000px;
+            margin: 35px auto;
+        }
+
+        .celebration {
+            background: white;
+            border-radius: 18px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .year {
+            background: linear-gradient(135deg, #e65100, #ff9800);
+            color: white;
+            padding: 15px 22px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .title {
+            color: #e65100;
+            font-size: 26px;
+            margin-top: 0;
+        }
+
+        .description {
+            color: #555;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+
+        .celebration-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        /* VIDEO BUTTON */
+
+        .video-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 14px 25px;
+            background: linear-gradient(135deg, #e65100, #ff9800);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 17px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(230, 81, 0, 0.3);
+            transition: 0.25s;
+        }
+
+        .video-button:hover {
+            transform: scale(1.05);
+        }
+
+        .empty {
+            background: white;
+            padding: 50px 20px;
+            text-align: center;
+            border-radius: 15px;
+        }
+
+        .back {
+            display: block;
+            width: fit-content;
+            margin: 35px auto;
+            text-decoration: none;
+            color: white;
+            background: #555;
+            padding: 12px 25px;
+            border-radius: 30px;
+        }
+
+        @media (max-width: 700px) {
+            .hero h1 {
+                font-size: 29px;
+            }
+
+            .content {
+                padding: 18px;
+            }
+
+            .title {
+                font-size: 22px;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div class="hero">
+
+        <h1>
+            🙏 Previous Vinayaka Chavithi Celebrations
+        </h1>
+
+        <p>
+            Relive our beautiful celebration memories ❤️
+        </p>
+
+    </div>
+
+
+    <div class="container">
+
+        {% if celebrations %}
+
+            {% for celebration in celebrations %}
+
+            <div class="celebration">
+
+                <div class="year">
+                    🪔 {{ celebration[1] }}
+                </div>
+
+                <div class="content">
+
+                    <h2 class="title">
+                        {{ celebration[2] }}
+                    </h2>
+
+                    {% if celebration[3] %}
+                    <p class="description">
+                        {{ celebration[3] }}
+                    </p>
+                    {% endif %}
+
+
+                    {% if celebration[4] %}
+
+                    <img
+                        src="{{ celebration[4] }}"
+                        class="celebration-image"
+                        alt="{{ celebration[2] }}"
+                    >
+
+                    {% endif %}
+
+
+                    {% if celebration[5] %}
+
+                    <a
+                        href="{{ celebration[5] | replace('/preview', '/view') }}"
+                        target="_blank"
+                        class="video-button"
+                    >
+                        ▶ Tap to Watch Video
+                    </a>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="empty">
+
+                <h2>
+                    🙏 No Previous Celebrations Yet
+                </h2>
+
+                <p>
+                    Celebration memories will appear here.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+
+        <a
+            href="{{ url_for('home') }}"
+            class="back"
+        >
+            ← Back to Home
+        </a>
+
+    </div>
+
+</body>
+
+</html>
