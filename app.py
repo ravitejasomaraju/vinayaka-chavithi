@@ -1,1209 +1,652 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from werkzeug.security import check_password_hash
 from database import get_connection
-
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    session
-)
-
-from werkzeug.security import (
-    check_password_hash,
-    generate_password_hash
-)
-
-from database import get_connection
-
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "development-secret-key")
 
-# ==========================================================
-# SECRET KEY
-# ==========================================================
 
-app.secret_key = os.environ.get(
-    "SECRET_KEY",
-    "development-secret-key"
-)
+def close_conn(conn):
+    try:
+        if conn:
+            conn.close()
+    except Exception:
+        pass
+
+
+def is_admin():
+    return str(session.get("role", "")).lower() == "admin"
+
+
+def is_member():
+    role = str(session.get("role", "")).lower()
+    return role in ("member", "youth member", "youth_member")
+
+
+def is_logged_in():
+    return bool(session.get("user_id"))
 
 
 # ==========================================================
 # HOME
 # ==========================================================
-
 @app.route("/")
 def home():
-
-    conn = None
-
+    timings = []
+    programs = []
     try:
         conn = get_connection()
-
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT
-                    id,
-                    pooja_name,
-                    pooja_date,
-                    start_time,
-                    end_time,
-                    description
+                SELECT id, date, time, description
                 FROM pooja_timings
-                ORDER BY pooja_date ASC, start_time ASC
+                ORDER BY date, time
             """)
-
             timings = cur.fetchall()
-
-        return render_template(
-            "index.html",
-            timings=timings
-        )
-
+            cur.execute("""
+                SELECT id, program_name, program_date, program_time, description
+                FROM programs
+                ORDER BY program_date, program_time
+            """)
+            programs = cur.fetchall()
+        conn.close()
     except Exception as e:
-
-        print("HOME ERROR:", e)
-
-        return render_template(
-            "index.html",
-            timings=[]
-        )
-
-    finally:
-
-        if conn:
-            conn.close()
+        print("HOME DATABASE ERROR:", e)
+    return render_template("index.html", timings=timings, programs=programs)
 
 
 # ==========================================================
 # LOGIN
 # ==========================================================
-
-@app.route("/login", methods=["GET", "POST"])
+@app.route("/login")
 def login():
-
-    if request.method == "POST":
-
-        phone = request.form.get(
-            "phone",
-            ""
-        ).strip()
-
-        password = request.form.get(
-            "password",
-            ""
-        )
-
-        if not phone or not password:
-
-            return render_template(
-                "login.html",
-                error="Phone number and password are required."
-            )
-
-        conn = None
-
-        try:
-
-            conn = get_connection()
-
-            with conn.cursor() as cur:
-
-                cur.execute(
-                    """
-                    SELECT
-                        id,
-                        name,
-                        password,
-                        role
-                    FROM users
-                    WHERE phone = %s
-                    """,
-                    (phone,)
-                )
-
-                user = cur.fetchone()
-
-            if user is None:
-
-                return render_template(
-                    "login.html",
-                    error="Invalid phone number or password."
-                )
-
-            user_id = user[0]
-            name = user[1]
-            password_hash = user[2]
-            role = user[3]
-
-            if not check_password_hash(
-                password_hash,
-                password
-            ):
-
-                return render_template(
-                    "login.html",
-                    error="Invalid phone number or password."
-                )
-
-            session.clear()
-
-            session["user_id"] = user_id
-            session["name"] = name
-            session["role"] = role
-
-            if role == "admin":
-
-                return redirect(
-                    url_for("admin")
-                )
-
-            if role == "member":
-
-                return redirect(
-                    url_for("member")
-                )
-
-            session.clear()
-
-            return render_template(
-                "login.html",
-                error="Invalid user role."
-            )
-
-        except Exception as e:
-
-            print("LOGIN ERROR:", e)
-
-            return render_template(
-                "login.html",
-                error="Database error: " + str(e)
-            )
-
-        finally:
-
-            if conn:
-                conn.close()
-
     return render_template("login.html")
+
+
+@app.route("/admin-login", methods=["GET", "POST"])
+def admin_login():
+    if request.method == "POST":
+        identifier = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        conn = None
+        try:
+            conn = get_connection()
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT id, name, phone, role, password
+                    FROM users
+                    WHERE (phone = %s OR name = %s)
+                      AND LOWER(role) = 'admin'
+                    LIMIT 1
+                """, (identifier, identifier))
+                user = cur.fetchone()
+            conn.close()
+            if user and check_password_hash(user[4], password):
+                session.clear()
+                session["user_id"] = user[0]
+                session["name"] = user[1]
+                session["phone"] = user[2]
+                session["role"] = user[3]
+                return redirect(url_for("admin"))
+            flash("Invalid admin username/phone or password.")
+        except Exception as e:
+            close_conn(conn)
+            print("ADMIN LOGIN ERROR:", e)
+            flash("Login error. Check Render logs.")
+    return render_template("admin_login.html")
+
+
+@app.route("/youth-login", methods=["GET", "POST"])
+def youth_login():
+    if request.method == "POST":
+        identifier = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        conn = None
+        try:
+            conn = get_connection()
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT id, name, phone, role, password
+                    FROM users
+                    WHERE (phone = %s OR name = %s)
+                      AND LOWER(role) IN ('member','youth member','youth_member')
+                    LIMIT 1
+                """, (identifier, identifier))
+                user = cur.fetchone()
+            conn.close()
+            if user and check_password_hash(user[4], password):
+                session.clear()
+                session["user_id"] = user[0]
+                session["name"] = user[1]
+                session["phone"] = user[2]
+                session["role"] = user[3]
+                return redirect(url_for("member"))
+            flash("Invalid member name/phone or password.")
+        except Exception as e:
+            close_conn(conn)
+            print("MEMBER LOGIN ERROR:", e)
+            flash("Login error. Check Render logs.")
+    return render_template("youth_login.html")
 
 
 # ==========================================================
 # ADMIN DASHBOARD
 # ==========================================================
-
 @app.route("/admin")
 def admin():
+    if not is_admin():
+        return redirect(url_for("admin_login"))
 
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return redirect(url_for("login"))
-
+    total_members = total_users = 0
+    total_donations = 0
+    total_programs = 0
     conn = None
-
     try:
-
         conn = get_connection()
-
         with conn.cursor() as cur:
-
-            # Total users
-            cur.execute("""
-                SELECT COUNT(*)
-                FROM users
-            """)
-
+            cur.execute("SELECT COUNT(*) FROM users")
             total_users = cur.fetchone()[0]
-
-            # Total members
             cur.execute("""
-                SELECT COUNT(*)
-                FROM users
-                WHERE role = 'member'
+                SELECT COUNT(*) FROM users
+                WHERE LOWER(role) IN ('member','youth member','youth_member')
             """)
-
             total_members = cur.fetchone()[0]
-
-            # Total donations
-            cur.execute("""
-                SELECT COALESCE(SUM(amount), 0)
-                FROM donations
-                WHERE payment_status = 'Paid'
-            """)
-
+            cur.execute("SELECT COALESCE(SUM(amount),0) FROM donations WHERE payment_status = 'Paid'")
             total_donations = cur.fetchone()[0]
-
-            # Total programs
-            cur.execute("""
-                SELECT COUNT(*)
-                FROM programs
-            """)
-
+            cur.execute("SELECT COUNT(*) FROM programs")
             total_programs = cur.fetchone()[0]
-
-        return render_template(
-            "admin.html",
-            name=session.get("name"),
-            total_users=total_users,
-            total_members=total_members,
-            total_donations=total_donations,
-            total_programs=total_programs
-        )
-
+        conn.close()
     except Exception as e:
+        close_conn(conn)
+        print("ADMIN DASHBOARD ERROR:", e)
 
-        print("ADMIN ERROR:", e)
+    return render_template(
+        "admin.html",
+        name=session.get("name", "Admin"),
+        total_members=total_members,
+        total_users=total_users,
+        total_donations=total_donations,
+        total_programs=total_programs
+    )
 
-        return "Admin dashboard error: " + str(e)
 
-    finally:
-
-        if conn:
-            conn.close()
-
-
-# ==========================================================
-# ADMIN MEMBERS
-# ==========================================================
-
-@app.route(
-    "/admin/members",
-    methods=["GET", "POST"]
-)
-def admin_members():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return redirect(url_for("login"))
-
-    message = None
-    error = None
-
-    conn = None
-
-    try:
-
-        conn = get_connection()
-
-        # --------------------------------------------------
-        # ADD MEMBER
-        # --------------------------------------------------
-
-        if request.method == "POST":
-
-            name = request.form.get(
-                "name",
-                ""
-            ).strip()
-
-            phone = request.form.get(
-                "phone",
-                ""
-            ).strip()
-
-            password = request.form.get(
-                "password",
-                ""
-            )
-
-            if not name:
-
-                error = "Member name is required."
-
-            elif not phone:
-
-                error = "Phone number is required."
-
-            elif not password:
-
-                error = "Password is required."
-
-            else:
-
-                password_hash = generate_password_hash(
-                    password
-                )
-
-                with conn.cursor() as cur:
-
-                    cur.execute(
-                        """
-                        SELECT id
-                        FROM users
-                        WHERE phone = %s
-                        """,
-                        (phone,)
-                    )
-
-                    existing = cur.fetchone()
-
-                    if existing:
-
-                        error = (
-                            "A user with this phone number "
-                            "already exists."
-                        )
-
-                    else:
-
-                        cur.execute(
-                            """
-                            INSERT INTO users
-                            (
-                                name,
-                                phone,
-                                password,
-                                role
-                            )
-                            VALUES
-                            (
-                                %s,
-                                %s,
-                                %s,
-                                'member'
-                            )
-                            """,
-                            (
-                                name,
-                                phone,
-                                password_hash
-                            )
-                        )
-
-                        conn.commit()
-
-                        message = (
-                            "Youth member added successfully!"
-                        )
-
-        # --------------------------------------------------
-        # GET MEMBERS
-        # --------------------------------------------------
-
-        with conn.cursor() as cur:
-
-            cur.execute("""
-                SELECT
-                    id,
-                    name,
-                    phone,
-                    role,
-                    created_at
-                FROM users
-                ORDER BY id DESC
-            """)
-
-            members = cur.fetchall()
-
-        return render_template(
-            "members.html",
-            members=members,
-            message=message,
-            error=error
-        )
-
-    except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print(
-            "ADMIN MEMBERS ERROR:",
-            e
-        )
-
-        return (
-            "Admin members error: "
-            + str(e)
-        )
-
-    finally:
-
-        if conn:
-            conn.close()
+@app.route("/admin-dashboard")
+def admin_dashboard():
+    return redirect(url_for("admin"))
 
 
 # ==========================================================
 # MEMBER DASHBOARD
 # ==========================================================
-
 @app.route("/member")
 def member():
+    if not is_member() and not is_admin():
+        return redirect(url_for("youth_login"))
 
-    if "user_id" not in session:
-        return redirect(url_for("login"))
+    my_donations = []
+    my_total = 0
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            if is_member():
+                cur.execute("""
+                    SELECT id, donor_name, phone, amount, payment_method,
+                           payment_status, donated_at
+                    FROM donations
+                    WHERE collected_by = %s
+                    ORDER BY id DESC
+                """, (session["user_id"],))
+            else:
+                cur.execute("""
+                    SELECT id, donor_name, phone, amount, payment_method,
+                           payment_status, donated_at
+                    FROM donations
+                    ORDER BY id DESC
+                """)
+            my_donations = cur.fetchall()
+            if is_member():
+                cur.execute("""
+                    SELECT COALESCE(SUM(amount),0)
+                    FROM donations
+                    WHERE collected_by = %s AND payment_status = 'Paid'
+                """, (session["user_id"],))
+            else:
+                cur.execute("""
+                    SELECT COALESCE(SUM(amount),0)
+                    FROM donations
+                    WHERE payment_status = 'Paid'
+                """)
+            my_total = cur.fetchone()[0]
+        conn.close()
+    except Exception as e:
+        close_conn(conn)
+        print("MEMBER DASHBOARD ERROR:", e)
 
-    if session.get("role") != "member":
-        return redirect(url_for("login"))
+    return render_template(
+        "member.html",
+        name=session.get("name", "Member"),
+        my_donations=my_donations,
+        my_total=my_total
+    )
+
+
+@app.route("/youth-dashboard")
+def youth_dashboard():
+    return redirect(url_for("member"))
+
+
+# ==========================================================
+# MEMBERS MANAGEMENT
+# ==========================================================
+@app.route("/admin/members", methods=["GET", "POST"])
+def members():
+    if not is_admin():
+        return redirect(url_for("admin_login"))
 
     conn = None
-
+    message = None
+    error = None
     try:
-
         conn = get_connection()
+        if request.method == "POST":
+            name = request.form.get("name", "").strip()
+            phone = request.form.get("phone", "").strip()
+            password = request.form.get("password", "")
+            if not name or not phone or not password:
+                error = "Name, phone and password are required."
+            else:
+                from werkzeug.security import generate_password_hash
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO users (name, phone, role, password)
+                        VALUES (%s, %s, 'Youth Member', %s)
+                    """, (name, phone, generate_password_hash(password)))
+                conn.commit()
+                message = "Member added successfully."
 
         with conn.cursor() as cur:
-
-            cur.execute(
-                """
-                SELECT
-                    id,
-                    donor_name,
-                    phone,
-                    amount,
-                    payment_method,
-                    payment_status,
-                    donated_at
-                FROM donations
-                WHERE collected_by = %s
+            cur.execute("""
+                SELECT id, name, phone, role
+                FROM users
+                WHERE LOWER(role) IN ('member','youth member','youth_member')
                 ORDER BY id DESC
-                """,
-                (session["user_id"],)
-            )
-
-            my_donations = cur.fetchall()
-
-            cur.execute(
-                """
-                SELECT COALESCE(SUM(amount), 0)
-                FROM donations
-                WHERE collected_by = %s
-                AND payment_status = 'Paid'
-                """,
-                (session["user_id"],)
-            )
-
-            my_total = cur.fetchone()[0]
-
-        return render_template(
-            "member.html",
-            name=session.get("name"),
-            my_donations=my_donations,
-            my_total=my_total
-        )
-
+            """)
+            member_list = cur.fetchall()
+        conn.close()
     except Exception as e:
+        close_conn(conn)
+        print("MEMBERS ERROR:", e)
+        error = "Unable to manage members: " + str(e)
+        member_list = []
 
-        print(
-            "MEMBER ERROR:",
-            e
-        )
+    return render_template("members.html", members=member_list, message=message, error=error)
 
-        return (
-            "Member dashboard error: "
-            + str(e)
-        )
 
-    finally:
-
-        if conn:
-            conn.close()
+@app.route("/admin/members/delete/<int:user_id>", methods=["POST"])
+def delete_member(user_id):
+    if not is_admin():
+        return redirect(url_for("admin_login"))
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("DELETE FROM users WHERE id=%s AND LOWER(role) IN ('member','youth member','youth_member')", (user_id,))
+        conn.commit()
+        conn.close()
+        flash("Member deleted successfully.")
+    except Exception as e:
+        close_conn(conn)
+        print("DELETE MEMBER ERROR:", e)
+        flash("Unable to delete member.")
+    return redirect(url_for("members"))
 
 
 # ==========================================================
 # DONATIONS
 # ==========================================================
-
-@app.route(
-    "/donations",
-    methods=["GET", "POST"]
-)
-@app.route(
-    "/collect-donation",
-    methods=["GET", "POST"]
-)
-def donations():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") not in [
-        "admin",
-        "member"
-    ]:
-        return redirect(url_for("login"))
-
-    message = None
-    error = None
-
+@app.route("/member/collect-donation", methods=["GET", "POST"])
+@app.route("/collect-donation", methods=["GET", "POST"])
+def collect_donation():
+    if not is_member() and not is_admin():
+        return redirect(url_for("youth_login"))
     conn = None
-
+    error = None
+    message = None
     try:
-
         conn = get_connection()
-
-        # --------------------------------------------------
-        # ADD DONATION
-        # --------------------------------------------------
-
         if request.method == "POST":
-
-            donor_name = request.form.get(
-                "donor_name",
-                ""
-            ).strip()
-
-            phone = request.form.get(
-                "phone",
-                ""
-            ).strip()
-
-            amount = request.form.get(
-                "amount",
-                ""
-            ).strip()
-
-            payment_method = request.form.get(
-                "payment_method",
-                "Cash"
-            ).strip()
-
-            payment_status = request.form.get(
-                "payment_status",
-                "Paid"
-            ).strip()
-
-            if not donor_name:
-
-                error = "Donor name is required."
-
-            elif not amount:
-
-                error = "Donation amount is required."
-
+            donor_name = request.form.get("donor_name", "").strip()
+            phone = request.form.get("phone", "").strip()
+            amount = request.form.get("amount", "").strip()
+            payment_method = request.form.get("payment_method", "Cash").strip()
+            payment_status = request.form.get("payment_status", "Paid").strip()
+            if not donor_name or not amount:
+                error = "Donor name and amount are required."
             else:
-
                 with conn.cursor() as cur:
-
-                    cur.execute(
-                        """
+                    cur.execute("""
                         INSERT INTO donations
-                        (
-                            donor_name,
-                            phone,
-                            amount,
-                            payment_method,
-                            payment_status,
-                            collected_by
-                        )
-                        VALUES
-                        (
-                            %s,
-                            %s,
-                            %s,
-                            %s,
-                            %s,
-                            %s
-                        )
-                        """,
-                        (
-                            donor_name,
-                            phone,
-                            amount,
-                            payment_method,
-                            payment_status,
-                            session["user_id"]
-                        )
-                    )
-
+                        (donor_name, phone, amount, payment_method,
+                         payment_status, collected_by)
+                        VALUES (%s,%s,%s,%s,%s,%s)
+                    """, (donor_name, phone, amount, payment_method,
+                          payment_status, session.get("user_id")))
                 conn.commit()
-
-                message = (
-                    "Donation added successfully!"
-                )
-
-        # --------------------------------------------------
-        # GET DONATIONS
-        # --------------------------------------------------
+                message = "Donation saved successfully."
 
         with conn.cursor() as cur:
-
-            cur.execute(
-                """
-                SELECT
-                    d.id,
-                    d.donor_name,
-                    d.phone,
-                    d.amount,
-                    d.payment_method,
-                    d.payment_status,
-                    d.donated_at,
-                    u.name
-                FROM donations d
-                LEFT JOIN users u
-                    ON d.collected_by = u.id
-                ORDER BY d.id DESC
-                """
-            )
-
-            donation_list = cur.fetchall()
-
-            cur.execute(
-                """
-                SELECT COALESCE(SUM(amount), 0)
+            cur.execute("""
+                SELECT id, donor_name, phone, amount, payment_method,
+                       payment_status, donated_at, collected_by
                 FROM donations
-                WHERE payment_status = 'Paid'
-                """
-            )
-
+                ORDER BY id DESC
+            """)
+            donation_list = cur.fetchall()
+            cur.execute("""
+                SELECT COALESCE(SUM(amount),0)
+                FROM donations
+                WHERE payment_status='Paid'
+            """)
             total_collection = cur.fetchone()[0]
-
-        return render_template(
-            "donations.html",
-            donations=donation_list,
-            total_collection=total_collection,
-            message=message,
-            error=error
-        )
-
+        conn.close()
     except Exception as e:
+        close_conn(conn)
+        print("COLLECT DONATION ERROR:", e)
+        error = str(e)
+        donation_list = []
+        total_collection = 0
 
-        if conn:
-            conn.rollback()
-
-        print(
-            "DONATION ERROR:",
-            e
-        )
-
-        return (
-            "Donation error: "
-            + str(e)
-        )
-
-    finally:
-
-        if conn:
-            conn.close()
+    return render_template(
+        "collect_donation.html",
+        donations=donation_list,
+        total_collection=total_collection,
+        error=error,
+        message=message,
+        admin_mode=is_admin()
+    )
 
 
-# ==========================================================
-# ADMIN POOJA TIMINGS
-# ==========================================================
-
-@app.route(
-    "/admin/pooja-timings",
-    methods=["GET", "POST"]
-)
-def admin_pooja_timings():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return redirect(url_for("login"))
-
-    message = None
-    error = None
-
+@app.route("/admin/donations")
+def admin_donations():
+    if not is_admin():
+        return redirect(url_for("admin_login"))
     conn = None
-
     try:
-
         conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, donor_name, phone, amount, payment_method,
+                       payment_status, donated_at, collected_by
+                FROM donations ORDER BY id DESC
+            """)
+            rows = cur.fetchall()
+        conn.close()
+    except Exception as e:
+        close_conn(conn)
+        print("ADMIN DONATIONS ERROR:", e)
+        rows = []
+    return render_template("donations.html", donations=rows)
 
-        # --------------------------------------------------
-        # ADD POOJA TIMING
-        # --------------------------------------------------
 
+@app.route("/admin/donations/edit/<int:donation_id>", methods=["GET", "POST"])
+def edit_donation(donation_id):
+    if not is_admin():
+        return redirect(url_for("admin_login"))
+    conn = None
+    try:
+        conn = get_connection()
         if request.method == "POST":
-
-            pooja_name = request.form.get(
-                "pooja_name",
-                ""
-            ).strip()
-
-            pooja_date = request.form.get(
-                "pooja_date",
-                ""
-            ).strip()
-
-            start_time = request.form.get(
-                "start_time",
-                ""
-            ).strip()
-
-            end_time = request.form.get(
-                "end_time",
-                ""
-            ).strip()
-
-            description = request.form.get(
-                "description",
-                ""
-            ).strip()
-
-            if not pooja_name:
-
-                error = "Pooja name is required."
-
-            elif not pooja_date:
-
-                error = "Pooja date is required."
-
-            elif not start_time:
-
-                error = "Start time is required."
-
-            else:
-
-                with conn.cursor() as cur:
-
-                    cur.execute(
-                        """
-                        INSERT INTO pooja_timings
-                        (
-                            pooja_name,
-                            pooja_date,
-                            start_time,
-                            end_time,
-                            description
-                        )
-                        VALUES
-                        (
-                            %s,
-                            %s,
-                            %s,
-                            %s,
-                            %s
-                        )
-                        """,
-                        (
-                            pooja_name,
-                            pooja_date,
-                            start_time,
-                            end_time
-                            if end_time
-                            else None,
-                            description
-                            if description
-                            else None
-                        )
-                    )
-
-                conn.commit()
-
-                message = (
-                    "Pooja timing added successfully!"
-                )
-
-        # --------------------------------------------------
-        # GET TIMINGS
-        # --------------------------------------------------
-
-        with conn.cursor() as cur:
-
-            cur.execute(
-                """
-                SELECT
-                    id,
-                    pooja_name,
-                    pooja_date,
-                    start_time,
-                    end_time,
-                    description
-                FROM pooja_timings
-                ORDER BY
-                    pooja_date ASC,
-                    start_time ASC
-                """
-            )
-
-            timings = cur.fetchall()
-
-        return render_template(
-            "admin_pooja_timings.html",
-            timings=timings,
-            message=message,
-            error=error
-        )
-
-    except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print(
-            "POOJA TIMINGS ERROR:",
-            e
-        )
-
-        return (
-            "Pooja timings error: "
-            + str(e)
-        )
-
-    finally:
-
-        if conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE donations
+                    SET donor_name=%s, phone=%s, amount=%s,
+                        payment_method=%s, payment_status=%s
+                    WHERE id=%s
+                """, (
+                    request.form.get("donor_name", "").strip(),
+                    request.form.get("phone", "").strip(),
+                    request.form.get("amount", "").strip(),
+                    request.form.get("payment_method", "Cash"),
+                    request.form.get("payment_status", "Paid"),
+                    donation_id
+                ))
+            conn.commit()
             conn.close()
+            return redirect(url_for("admin_donations"))
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, donor_name, phone, amount, payment_method,
+                       payment_status, donated_at, collected_by
+                FROM donations WHERE id=%s
+            """, (donation_id,))
+            donation = cur.fetchone()
+        conn.close()
+        if not donation:
+            return "Donation not found", 404
+        return render_template("edit_donation.html", donation=donation)
+    except Exception as e:
+        close_conn(conn)
+        print("EDIT DONATION ERROR:", e)
+        return render_template("edit_donation.html", donation=[donation_id,"","",0,"Cash","Paid",None,None], error=str(e))
 
 
-# ==========================================================
-# DELETE POOJA TIMING
-# ==========================================================
-
-@app.route(
-    "/admin/pooja-timings/delete/<int:timing_id>",
-    methods=["POST"]
-)
-def delete_pooja_timing(timing_id):
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return redirect(url_for("login"))
-
+@app.route("/admin/donations/delete/<int:donation_id>", methods=["POST"])
+def delete_donation(donation_id):
+    if not is_admin():
+        return redirect(url_for("admin_login"))
     conn = None
-
     try:
-
         conn = get_connection()
-
         with conn.cursor() as cur:
-
-            cur.execute(
-                """
-                DELETE FROM pooja_timings
-                WHERE id = %s
-                """,
-                (timing_id,)
-            )
-
+            cur.execute("DELETE FROM donations WHERE id=%s", (donation_id,))
         conn.commit()
-
-        return redirect(
-            url_for(
-                "admin_pooja_timings"
-            )
-        )
-
+        conn.close()
+        flash("Donation deleted successfully.")
     except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print(
-            "DELETE POOJA ERROR:",
-            e
-        )
-
-        return (
-            "Delete pooja timing error: "
-            + str(e)
-        )
-
-    finally:
-
-        if conn:
-            conn.close()
+        close_conn(conn)
+        print("DELETE DONATION ERROR:", e)
+        flash("Unable to delete donation.")
+    return redirect(url_for("admin_donations"))
 
 
 # ==========================================================
-# PUBLIC POOJA TIMINGS
+# PUBLIC DONATIONS
 # ==========================================================
+@app.route("/donations", methods=["GET", "POST"])
+def donations():
+    return redirect(url_for("admin_donations")) if is_admin() else redirect(url_for("collect_donation"))
+
+
+# ==========================================================
+# POOJA + PROGRAMS
+# ==========================================================
+@app.route("/add-program", methods=["POST"])
+def add_program():
+    if not is_admin(): return redirect(url_for("admin_login"))
+    conn = None
+    try:
+        conn = get_connection()
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO programs(program_name, program_date, program_time, description)
+                VALUES(%s,%s,%s,%s)
+            """, (request.form.get("program_name",""), request.form.get("program_date",""), request.form.get("program_time",""), request.form.get("description","")))
+        conn.commit(); conn.close()
+    except Exception as e:
+        close_conn(conn); print("ADD PROGRAM ERROR:", e)
+    return redirect(url_for("admin"))
+
+
+@app.route("/delete-program/<int:program_id>", methods=["POST"])
+def delete_program(program_id):
+    if not is_admin(): return redirect(url_for("admin_login"))
+    conn=None
+    try:
+        conn=get_connection()
+        with conn.cursor() as cur: cur.execute("DELETE FROM programs WHERE id=%s",(program_id,))
+        conn.commit(); conn.close()
+    except Exception as e: close_conn(conn); print("DELETE PROGRAM ERROR:",e)
+    return redirect(url_for("admin"))
+
+
+@app.route("/add-timing", methods=["POST"])
+def add_timing():
+    if not is_admin(): return redirect(url_for("admin_login"))
+    conn=None
+    try:
+        conn=get_connection()
+        with conn.cursor() as cur:
+            cur.execute("INSERT INTO pooja_timings(date,time,description) VALUES(%s,%s,%s)",(request.form.get("date",""),request.form.get("time",""),request.form.get("description","")))
+        conn.commit(); conn.close()
+    except Exception as e: close_conn(conn); print("ADD TIMING ERROR:",e)
+    return redirect(url_for("admin"))
+
+
+@app.route("/delete-timing/<int:timing_id>", methods=["POST"])
+def delete_timing(timing_id):
+    if not is_admin(): return redirect(url_for("admin_login"))
+    conn=None
+    try:
+        conn=get_connection()
+        with conn.cursor() as cur: cur.execute("DELETE FROM pooja_timings WHERE id=%s",(timing_id,))
+        conn.commit(); conn.close()
+    except Exception as e: close_conn(conn); print("DELETE TIMING ERROR:",e)
+    return redirect(url_for("admin"))
+
 
 @app.route("/pooja-timings")
-def public_pooja_timings():
-
-    conn = None
-
+def pooja_timings():
+    conn=None
     try:
-
-        conn = get_connection()
-
+        conn=get_connection()
         with conn.cursor() as cur:
-
-            cur.execute(
-                """
-                SELECT
-                    id,
-                    pooja_name,
-                    pooja_date,
-                    start_time,
-                    end_time,
-                    description
-                FROM pooja_timings
-                ORDER BY
-                    pooja_date ASC,
-                    start_time ASC
-                """
-            )
-
-            timings = cur.fetchall()
-
-        return render_template(
-            "pooja_timings.html",
-            timings=timings
-        )
-
-    except Exception as e:
-
-        print(
-            "PUBLIC POOJA ERROR:",
-            e
-        )
-
-        return (
-            "Pooja timings error: "
-            + str(e)
-        )
-
-    finally:
-
-        if conn:
-            conn.close()
-
-@app.route('/admin/delete-member/<int:user_id>', methods=['POST'])
-def delete_member(user_id):
-    if session.get('role') != 'admin':
-        return "Unauthorized", 403
-
-    conn = get_connection()
-
-    try:
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT role FROM users WHERE id = %s",
-                (user_id,)
-            )
-            user = cur.fetchone()
-
-            if not user:
-                return "Member not found", 404
-
-            if user[0] == 'admin':
-                return "Admin account cannot be deleted", 403
-
-            cur.execute(
-                "DELETE FROM users WHERE id = %s AND role = 'member'",
-                (user_id,)
-            )
-
-        conn.commit()
-        return redirect(url_for('admin_dashboard'))
-
-    except Exception as e:
-        conn.rollback()
-        print("DELETE MEMBER ERROR:", e)
-        return "Database error", 500
-
-    finally:
+            cur.execute("SELECT id,date,time,description FROM pooja_timings ORDER BY date,time")
+            rows=cur.fetchall()
         conn.close()
-
-# ==========================================================
-# SHARED MEMBER CHAT - ADMIN + MEMBERS
-# ==========================================================
-
-@app.route("/member/chat", methods=["GET", "POST"])
-def member_chat():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") not in ["admin", "member"]:
-        return redirect(url_for("login"))
-
-    conn = None
-
-    try:
-        conn = get_connection()
-
-        if request.method == "POST":
-
-            message = request.form.get(
-                "message",
-                ""
-            ).strip()
-
-            if message:
-
-                user_id = session["user_id"]
-                user_name = session.get("name", "User")
-
-                with conn.cursor() as cur:
-                    cur.execute(
-                        """
-                        INSERT INTO member_messages
-                        (
-                            sender_id,
-                            sender_name,
-                            message
-                        )
-                        VALUES (%s, %s, %s)
-                        """,
-                        (
-                            user_id,
-                            user_name,
-                            message
-                        )
-                    )
-
-                conn.commit()
-
-            return redirect(url_for("member_chat"))
-
-        with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT
-                    id,
-                    sender_id,
-                    sender_name,
-                    message,
-                    created_at
-                FROM member_messages
-                ORDER BY created_at ASC
-                """
-            )
-
-            messages = cur.fetchall()
-
-        return render_template(
-            "member_chat.html",
-            messages=messages
-        )
-
     except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print("MEMBER CHAT ERROR:", e)
-
-        return "Member chat error: " + str(e)
-
-    finally:
-
-        if conn:
-            conn.close()
+        close_conn(conn); print("POOJA ERROR:",e); rows=[]
+    return render_template("pooja_timings.html", timings=rows)
 
 
 # ==========================================================
-# LIVE CHAT MESSAGES
+# PREVIOUS CELEBRATIONS
 # ==========================================================
+@app.route("/previous-celebrations")
+def previous_celebrations():
+    conn=None
+    try:
+        conn=get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT id,year,title,description,image_url,video_url FROM previous_celebrations ORDER BY year DESC,id DESC")
+            rows=cur.fetchall()
+        conn.close()
+    except Exception as e:
+        close_conn(conn); print("PREVIOUS CELEBRATIONS ERROR:",e); rows=[]
+    return render_template("previous_celebrations.html", celebrations=rows)
+
+
+@app.route("/admin/celebrations", methods=["GET","POST"])
+def admin_celebrations():
+    if not is_admin(): return redirect(url_for("admin_login"))
+    message=None; error=None; conn=None
+    try:
+        conn=get_connection()
+        if request.method=="POST":
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO previous_celebrations(year,title,description,image_url,video_url)
+                    VALUES(%s,%s,%s,%s,%s)
+                """,(request.form.get("year"),request.form.get("title",""),request.form.get("description",""),request.form.get("image_url",""),request.form.get("video_url","")))
+            conn.commit(); message="Celebration added successfully."
+        with conn.cursor() as cur:
+            cur.execute("SELECT id,year,title,description,image_url,video_url FROM previous_celebrations ORDER BY year DESC,id DESC")
+            rows=cur.fetchall()
+        conn.close()
+    except Exception as e:
+        close_conn(conn); print("ADMIN CELEBRATIONS ERROR:",e); error=str(e); rows=[]
+    return render_template("admin_celebrations.html",celebrations=rows,message=message,error=error)
+
+
+@app.route("/admin/celebrations/delete/<int:celebration_id>", methods=["POST"])
+def delete_celebration(celebration_id):
+    if not is_admin(): return redirect(url_for("admin_login"))
+    conn=None
+    try:
+        conn=get_connection()
+        with conn.cursor() as cur: cur.execute("DELETE FROM previous_celebrations WHERE id=%s",(celebration_id,))
+        conn.commit(); conn.close()
+    except Exception as e: close_conn(conn); print("DELETE CELEBRATION ERROR:",e)
+    return redirect(url_for("admin_celebrations"))
+
+
+# ==========================================================
+# SHARED MEMBER CHAT
+# ==========================================================
+@app.route("/member/chat", methods=["GET","POST"])
+def member_chat():
+    if not is_logged_in(): return redirect(url_for("login"))
+    if request.method=="POST":
+        msg=request.form.get("message","").strip()
+        if msg:
+            conn=None
+            try:
+                conn=get_connection()
+                with conn.cursor() as cur:
+                    cur.execute("INSERT INTO member_messages(sender_id,sender_name,message) VALUES(%s,%s,%s)",(session["user_id"],session.get("name","User"),msg))
+                conn.commit(); conn.close()
+            except Exception as e: close_conn(conn); print("CHAT SEND ERROR:",e)
+        return redirect(url_for("member_chat"))
+    conn=None
+    try:
+        conn=get_connection()
+        with conn.cursor() as cur:
+            cur.execute("SELECT id,sender_id,sender_name,message,created_at FROM member_messages ORDER BY created_at ASC")
+            rows=cur.fetchall()
+        conn.close()
+    except Exception as e: close_conn(conn); print("CHAT LOAD ERROR:",e); rows=[]
+    return render_template("member_chat.html",messages=rows)
+
 
 @app.route("/member/chat/messages")
 def member_chat_messages():
-
-    if "user_id" not in session:
-        return {"error": "Not logged in"}, 401
-
-    if session.get("role") not in ["admin", "member"]:
-        return {"error": "Unauthorized"}, 403
-
-    conn = None
-
+    if not is_logged_in(): return jsonify(error="Not logged in"),401
+    conn=None
     try:
-
-        conn = get_connection()
-
+        conn=get_connection()
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT
-                    id,
-                    sender_id,
-                    sender_name,
-                    message,
-                    created_at
-                FROM member_messages
-                ORDER BY created_at ASC
-                """
-            )
-
-            rows = cur.fetchall()
-
-        messages = []
-
-        for row in rows:
-
-            created_at = row[4]
-
-            if created_at:
-                created_at = created_at.strftime(
-                    "%d-%m-%Y %I:%M %p"
-                )
-
-            messages.append({
-                "id": row[0],
-                "sender_id": row[1],
-                "sender_name": row[2],
-                "message": row[3],
-                "created_at": created_at
-            })
-
-        return {"messages": messages}
-
+            cur.execute("SELECT id,sender_id,sender_name,message,created_at FROM member_messages ORDER BY created_at ASC")
+            rows=cur.fetchall()
+        conn.close()
+        return jsonify(messages=[{"id":r[0],"sender_id":r[1],"sender_name":r[2],"message":r[3],"created_at":r[4].strftime("%d-%m-%Y %I:%M %p") if r[4] else ""} for r in rows])
     except Exception as e:
-
-        print("CHAT MESSAGES ERROR:", e)
-
-        return {"error": str(e)}, 500
-
-    finally:
-
-        if conn:
-            conn.close()
+        close_conn(conn); print("CHAT API ERROR:",e); return jsonify(error=str(e)),500
 
 
 # ==========================================================
-# VIDEO CONFERENCE - ADMIN + MEMBERS
+# VIDEO CONFERENCE
 # ==========================================================
-
 @app.route("/video-conference")
 def video_conference():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") not in ["admin", "member"]:
-        return redirect(url_for("login"))
-
-    return render_template(
-        "video_conference.html",
-        name=session.get("name"),
-        role=session.get("role")
-    )
+    if not is_logged_in(): return redirect(url_for("login"))
+    return render_template("video_conference.html",name=session.get("name","User"),role=session.get("role"))
 
 
 # ==========================================================
 # LOGOUT
 # ==========================================================
-
 @app.route("/logout")
 def logout():
-
     session.clear()
-
-    return redirect(
-        url_for("login")
-    )
+    return redirect(url_for("home"))
 
 
-# ==========================================================
-# RUN APPLICATION
-# ==========================================================
+@app.errorhandler(500)
+def internal_error(error):
+    print("INTERNAL SERVER ERROR:",error)
+    return "<h1>Internal Server Error</h1><p>Check Render logs for details.</p>",500
+
 
 if __name__ == "__main__":
-
-    port = int(
-        os.environ.get(
-            "PORT",
-            5000
-        )
-    )
-
-    app.run(
-        host="0.0.0.0",
-        port=port,
-        debug=False
-    )
+    app.run(host="0.0.0.0",port=int(os.environ.get("PORT",5000)),debug=False)

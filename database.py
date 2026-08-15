@@ -1,18 +1,8 @@
 import os
 import psycopg
 
-
 def get_connection():
     database_url = os.environ.get("DATABASE_URL")
-
-    if database_url:
-        return psycopg.connect(database_url)
-
-    # Local PostgreSQL fallback
-    return psycopg.connect(
-        host="localhost",
-        port=5432,
-        dbname="vinayaka_chavithi",
-        user="postgres",
-        password="1811"
-    )
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured. Set your Supabase PostgreSQL connection string in Render environment variables.")
+    return psycopg.connect(database_url)
