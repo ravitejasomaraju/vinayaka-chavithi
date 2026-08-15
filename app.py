@@ -459,12 +459,16 @@ def delete_member(user_id):
             if user[0] == "admin":
                 return "Admin account cannot be deleted.", 403
 
+            # Keep old donation records, but remove the deleted
+            # member reference before deleting the member account.
             cur.execute(
-                "SELECT COUNT(*) FROM donations WHERE collected_by = %s",
+                """
+                UPDATE donations
+                SET collected_by = NULL
+                WHERE collected_by = %s
+                """,
                 (user_id,)
             )
-            if cur.fetchone()[0] > 0:
-                return "Cannot delete this member because donation records are linked to this account.", 409
 
             cur.execute(
                 "DELETE FROM users WHERE id = %s AND role = 'member'",
@@ -563,80 +567,49 @@ def member():
 
 
 # ==========================================================
-# DONATIONS
+# MEMBER COLLECT DONATION
 # ==========================================================
 
-@app.route(
-    "/donations",
-    methods=["GET", "POST"]
-)
-@app.route(
-    "/collect-donation",
-    methods=["GET", "POST"]
-)
-def donations():
+@app.route("/collect-donation", methods=["GET", "POST"])
+def collect_donation():
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    if session.get("role") not in [
-        "admin",
-        "member"
-    ]:
-        return redirect(url_for("login"))
+    if session.get("role") != "member":
+        return "Unauthorized", 403
 
     message = None
     error = None
-
     conn = None
 
     try:
-
-        conn = get_connection()
-
-        # --------------------------------------------------
-        # ADD DONATION
-        # --------------------------------------------------
-
         if request.method == "POST":
 
-            donor_name = request.form.get(
-                "donor_name",
-                ""
-            ).strip()
-
-            phone = request.form.get(
-                "phone",
-                ""
-            ).strip()
-
-            amount = request.form.get(
-                "amount",
-                ""
-            ).strip()
-
-            payment_method = request.form.get(
-                "payment_method",
-                "Cash"
-            ).strip()
-
-            payment_status = request.form.get(
-                "payment_status",
-                "Paid"
-            ).strip()
+            donor_name = request.form.get("donor_name", "").strip()
+            phone = request.form.get("phone", "").strip()
+            amount_text = request.form.get("amount", "").strip()
+            payment_method = request.form.get("payment_method", "Cash").strip()
+            payment_status = request.form.get("payment_status", "Paid").strip()
 
             if not donor_name:
-
                 error = "Donor name is required."
 
-            elif not amount:
-
+            elif not amount_text:
                 error = "Donation amount is required."
 
             else:
+                try:
+                    amount = float(amount_text)
+                    if amount <= 0:
+                        raise ValueError
+                except (TypeError, ValueError):
+                    error = "Enter a valid donation amount greater than 0."
+
+            if not error:
+                conn = get_connection()
 
                 with conn.cursor() as cur:
-
                     cur.execute(
                         """
                         INSERT INTO donations
@@ -648,15 +621,7 @@ def donations():
                             payment_status,
                             collected_by
                         )
-                        VALUES
-                        (
-                            %s,
-                            %s,
-                            %s,
-                            %s,
-                            %s,
-                            %s
-                        )
+                        VALUES (%s, %s, %s, %s, %s, %s)
                         """,
                         (
                             donor_name,
@@ -670,13 +635,50 @@ def donations():
 
                 conn.commit()
 
-                message = (
-                    "Donation added successfully!"
-                )
+                return redirect(url_for("member"))
 
-        # --------------------------------------------------
-        # GET DONATIONS
-        # --------------------------------------------------
+        return render_template(
+            "collect_donation.html",
+            message=message,
+            error=error
+        )
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("COLLECT DONATION ERROR:", e)
+
+        return render_template(
+            "collect_donation.html",
+            message=None,
+            error="Could not save donation: " + str(e)
+        )
+
+    finally:
+
+        if conn:
+            conn.close()
+
+
+# ==========================================================
+# ADMIN MANAGE DONATIONS
+# ==========================================================
+
+@app.route("/admin/donations")
+def admin_donations():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        return "Unauthorized", 403
+
+    conn = None
+
+    try:
+        conn = get_connection()
 
         with conn.cursor() as cur:
 
@@ -690,7 +692,7 @@ def donations():
                     d.payment_method,
                     d.payment_status,
                     d.donated_at,
-                    u.name
+                    COALESCE(u.name, 'Deleted Member')
                 FROM donations d
                 LEFT JOIN users u
                     ON d.collected_by = u.id
@@ -714,24 +716,14 @@ def donations():
             "donations.html",
             donations=donation_list,
             total_collection=total_collection,
-            message=message,
-            error=error
+            admin_mode=True
         )
 
     except Exception as e:
 
-        if conn:
-            conn.rollback()
+        print("ADMIN DONATIONS ERROR:", e)
 
-        print(
-            "DONATION ERROR:",
-            e
-        )
-
-        return (
-            "Donation error: "
-            + str(e)
-        )
+        return "Admin donations error: " + str(e), 500
 
     finally:
 
@@ -790,7 +782,7 @@ def edit_donation(donation_id):
                     return "Donation not found.", 404
 
             conn.commit()
-            return redirect(url_for("donations"))
+            return redirect(url_for("admin_donations"))
 
         with conn.cursor() as cur:
             cur.execute("""
@@ -851,7 +843,7 @@ def delete_donation(donation_id):
             )
 
         conn.commit()
-        return redirect(url_for("donations"))
+        return redirect(url_for("admin_donations"))
 
     except Exception as e:
         if conn:
