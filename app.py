@@ -1321,22 +1321,15 @@ def delete_celebration(celebration_id):
         if conn:
             conn.close()
 
-
-# ==========================================================
-# PUBLIC PREVIOUS CELEBRATIONS
-# ==========================================================
-
 @app.route("/previous-celebrations")
 def previous_celebrations():
 
     conn = None
 
     try:
-
         conn = get_connection()
 
         with conn.cursor() as cur:
-
             cur.execute("""
                 SELECT
                     id,
@@ -1358,15 +1351,13 @@ def previous_celebrations():
         )
 
     except Exception as e:
-
         print("PUBLIC CELEBRATIONS ERROR:", e)
-
         return "Previous celebrations error: " + str(e)
 
     finally:
-
         if conn:
             conn.close()
+
 # ==========================================================
 # RUN APPLICATION
 # ==========================================================
