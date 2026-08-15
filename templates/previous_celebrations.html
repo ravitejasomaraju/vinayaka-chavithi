@@ -1,17 +1,14 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Previous Celebrations</title>
 
     <style>
-
         * {
             box-sizing: border-box;
         }
@@ -19,274 +16,114 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background:
-                linear-gradient(
-                    135deg,
-                    #fff3e0,
-                    #ffe0b2
-                );
+            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
             color: #333;
         }
 
-        /* HEADER */
-
         .hero {
-            background:
-                linear-gradient(
-                    135deg,
-                    #e65100,
-                    #ff9800
-                );
-
+            background: linear-gradient(135deg, #e65100, #ff9800);
             color: white;
-
             text-align: center;
-
-            padding: 55px 20px;
-
-            box-shadow:
-                0 4px 15px rgba(0,0,0,.2);
+            padding: 50px 20px;
         }
 
         .hero h1 {
             margin: 0;
-
-            font-size: 42px;
-
-            text-shadow:
-                2px 3px 5px rgba(0,0,0,.3);
+            font-size: 38px;
         }
 
         .hero p {
-            font-size: 18px;
-
+            font-size: 17px;
             margin-top: 12px;
         }
 
-
-        /* CONTAINER */
-
         .container {
-
             width: 92%;
-
-            max-width: 1200px;
-
+            max-width: 1000px;
             margin: 35px auto;
         }
 
-
-        /* CELEBRATION CARD */
-
         .celebration {
-
             background: white;
-
             border-radius: 18px;
-
-            margin-bottom: 35px;
-
+            margin-bottom: 25px;
             overflow: hidden;
-
-            box-shadow:
-                0 5px 20px rgba(0,0,0,.15);
-
-            transition:
-                transform .25s,
-                box-shadow .25s;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
         }
-
-        .celebration:hover {
-
-            transform: translateY(-5px);
-
-            box-shadow:
-                0 10px 28px rgba(0,0,0,.22);
-        }
-
-
-        /* YEAR */
 
         .year {
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #ff6f00,
-                    #ff9800
-                );
-
+            background: linear-gradient(135deg, #e65100, #ff9800);
             color: white;
-
             padding: 15px 22px;
-
-            font-size: 24px;
-
+            font-size: 22px;
             font-weight: bold;
         }
 
-
         .content {
-
             padding: 25px;
         }
 
-
         .title {
-
             color: #e65100;
-
-            font-size: 27px;
-
+            font-size: 26px;
             margin-top: 0;
         }
 
-
         .description {
-
             color: #555;
-
-            font-size: 16px;
-
             line-height: 1.6;
+            font-size: 16px;
         }
 
-
-        /* IMAGE */
-
         .celebration-image {
-
             width: 100%;
-
-            max-height: 450px;
-
+            max-height: 400px;
             object-fit: cover;
-
             border-radius: 12px;
-
             margin-top: 15px;
         }
 
+        /* VIDEO BUTTON */
 
-        /* VIDEO */
-
-        .video-container {
-
-            position: relative;
-
-            width: 100%;
-
-            padding-bottom: 56.25%;
-
-            height: 0;
-
-            overflow: hidden;
-
-            border-radius: 14px;
-
-            margin-top: 20px;
-
-            background: #111;
-        }
-
-        .video-container iframe {
-
-            position: absolute;
-
-            top: 0;
-
-            left: 0;
-
-            width: 100%;
-
-            height: 100%;
-
-            border: 0;
-        }
-
-
-        /* WATCH LABEL */
-
-        .watch {
-
+        .video-button {
             display: inline-block;
-
-            background:
-                linear-gradient(
-                    135deg,
-                    #e65100,
-                    #ff9800
-                );
-
+            margin-top: 20px;
+            padding: 14px 25px;
+            background: linear-gradient(135deg, #e65100, #ff9800);
             color: white;
-
-            padding: 12px 22px;
-
+            text-decoration: none;
             border-radius: 30px;
-
-            margin-top: 18px;
-
+            font-size: 17px;
             font-weight: bold;
-
-            box-shadow:
-                0 4px 10px rgba(230,81,0,.3);
+            box-shadow: 0 5px 15px rgba(230, 81, 0, 0.3);
+            transition: 0.25s;
         }
 
-
-        /* EMPTY */
+        .video-button:hover {
+            transform: scale(1.05);
+        }
 
         .empty {
-
             background: white;
-
             padding: 50px 20px;
-
             text-align: center;
-
             border-radius: 15px;
-
-            box-shadow:
-                0 3px 15px rgba(0,0,0,.1);
         }
 
-
-        /* BACK BUTTON */
-
         .back {
-
             display: block;
-
             width: fit-content;
-
             margin: 35px auto;
-
             text-decoration: none;
-
             color: white;
-
             background: #555;
-
             padding: 12px 25px;
-
             border-radius: 30px;
         }
 
-        .back:hover {
-
-            background: #333;
-        }
-
-
-        /* MOBILE */
-
-        @media(max-width:700px) {
-
+        @media (max-width: 700px) {
             .hero h1 {
-                font-size: 30px;
-            }
-
-            .hero p {
-                font-size: 15px;
+                font-size: 29px;
             }
 
             .content {
@@ -296,154 +133,105 @@
             .title {
                 font-size: 22px;
             }
-
         }
-
     </style>
 
 </head>
 
-
 <body>
 
+    <div class="hero">
 
-<!-- HERO -->
+        <h1>
+            🙏 Previous Vinayaka Chavithi Celebrations
+        </h1>
 
-<div class="hero">
+        <p>
+            Relive our beautiful celebration memories ❤️
+        </p>
 
-    <h1>
-        🙏 Previous Vinayaka Chavithi Celebrations
-    </h1>
-
-    <p>
-        Relive our beautiful celebrations from previous years ❤️
-    </p>
-
-</div>
+    </div>
 
 
-<div class="container">
+    <div class="container">
+
+        {% if celebrations %}
+
+            {% for celebration in celebrations %}
+
+            <div class="celebration">
+
+                <div class="year">
+                    🪔 {{ celebration[1] }}
+                </div>
+
+                <div class="content">
+
+                    <h2 class="title">
+                        {{ celebration[2] }}
+                    </h2>
+
+                    {% if celebration[3] %}
+                    <p class="description">
+                        {{ celebration[3] }}
+                    </p>
+                    {% endif %}
 
 
-    {% if celebrations %}
+                    {% if celebration[4] %}
+
+                    <img
+                        src="{{ celebration[4] }}"
+                        class="celebration-image"
+                        alt="{{ celebration[2] }}"
+                    >
+
+                    {% endif %}
 
 
-        {% for celebration in celebrations %}
+                    {% if celebration[5] %}
 
+                    <a
+                        href="{{ celebration[5] | replace('/preview', '/view') }}"
+                        target="_blank"
+                        class="video-button"
+                    >
+                        ▶ Tap to Watch Video
+                    </a>
 
-        <div class="celebration">
+                    {% endif %}
 
-
-            <!-- YEAR -->
-
-            <div class="year">
-
-                🪔 {{ celebration[1] }}
+                </div>
 
             </div>
 
+            {% endfor %}
 
-            <div class="content">
+        {% else %}
 
+            <div class="empty">
 
-                <!-- TITLE -->
-
-                <h2 class="title">
-
-                    {{ celebration[2] }}
-
+                <h2>
+                    🙏 No Previous Celebrations Yet
                 </h2>
 
-
-                <!-- DESCRIPTION -->
-
-                {% if celebration[3] %}
-
-                <p class="description">
-
-                    {{ celebration[3] }}
-
+                <p>
+                    Celebration memories will appear here.
                 </p>
-
-                {% endif %}
-
-
-                <!-- IMAGE -->
-
-                {% if celebration[4] %}
-
-                <img
-                    src="{{ celebration[4] }}"
-                    class="celebration-image"
-                    alt="{{ celebration[2] }}"
-                >
-
-                {% endif %}
-
-
-                <!-- VIDEO -->
-
-                {% if celebration[5] %}
-
-                    <div class="watch">
-
-                        🎥 Celebration Video
-
-                    </div>
-
-
-                    <div class="video-container">
-
-                        <iframe
-                            src="{{ celebration[5] }}"
-                            allow="autoplay"
-                            allowfullscreen>
-                        </iframe>
-
-                    </div>
-
-                {% endif %}
-
 
             </div>
 
-
-        </div>
-
-
-        {% endfor %}
+        {% endif %}
 
 
-    {% else %}
+        <a
+            href="{{ url_for('home') }}"
+            class="back"
+        >
+            ← Back to Home
+        </a>
 
-
-        <div class="empty">
-
-            <h2>
-                🙏 No Previous Celebrations Yet
-            </h2>
-
-            <p>
-                Celebration memories will appear here.
-            </p>
-
-        </div>
-
-
-    {% endif %}
-
-
-    <a
-        href="{{ url_for('home') }}"
-        class="back">
-
-        ← Back to Home
-
-    </a>
-
-
-</div>
-
+    </div>
 
 </body>
 
