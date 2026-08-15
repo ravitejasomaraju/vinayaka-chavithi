@@ -1504,6 +1504,238 @@ def member_chat():
         if conn:
             conn.close()
 # ==========================================================
+# VIDEO CONFERENCE
+# ==========================================================
+
+@app.route("/video-conference")
+def video_conference():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") not in ["admin", "member"]:
+        return redirect(url_for("login"))
+
+    return render_template(
+        "video_conference.html",
+        name=session.get("name"),
+        role=session.get("role")
+    )
+# ==========================================================
+# MEMBER CHAT - ADMIN + MEMBERS
+# ==========================================================
+
+@app.route("/member/chat", methods=["GET", "POST"])
+def member_chat():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") not in ["admin", "member"]:
+        return redirect(url_for("login"))
+
+    conn = None
+
+    try:
+        conn = get_connection()
+
+        # --------------------------------------------------
+        # SEND MESSAGE
+        # --------------------------------------------------
+
+        if request.method == "POST":
+
+            message = request.form.get(
+                "message",
+                ""
+            ).strip()
+
+            if message:
+
+                user_id = session["user_id"]
+                user_name = session.get(
+                    "name",
+                    "User"
+                )
+
+                with conn.cursor() as cur:
+
+                    cur.execute(
+                        """
+                        INSERT INTO member_messages
+                        (
+                            sender_id,
+                            sender_name,
+                            message
+                        )
+                        VALUES
+                        (%s, %s, %s)
+                        """,
+                        (
+                            user_id,
+                            user_name,
+                            message
+                        )
+                    )
+
+                conn.commit()
+
+            return redirect(
+                url_for("member_chat")
+            )
+
+        # --------------------------------------------------
+        # GET MESSAGES
+        # --------------------------------------------------
+
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    sender_id,
+                    sender_name,
+                    message,
+                    created_at
+                FROM member_messages
+                ORDER BY created_at ASC
+                """
+            )
+
+            messages = cur.fetchall()
+
+        return render_template(
+            "member_chat.html",
+            messages=messages
+        )
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print(
+            "MEMBER CHAT ERROR:",
+            e
+        )
+
+        return (
+            "Member chat error: "
+            + str(e)
+        )
+
+    finally:
+
+        if conn:
+            conn.close()
+
+
+# ==========================================================
+# LIVE CHAT MESSAGES
+# ==========================================================
+
+@app.route("/member/chat/messages")
+def member_chat_messages():
+
+    if "user_id" not in session:
+        return {
+            "error": "Not logged in"
+        }, 401
+
+    if session.get("role") not in [
+        "admin",
+        "member"
+    ]:
+        return {
+            "error": "Unauthorized"
+        }, 403
+
+    conn = None
+
+    try:
+
+        conn = get_connection()
+
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT
+                    id,
+                    sender_id,
+                    sender_name,
+                    message,
+                    created_at
+                FROM member_messages
+                ORDER BY created_at ASC
+                """
+            )
+
+            rows = cur.fetchall()
+
+        messages = []
+
+        for row in rows:
+
+            created_at = row[4]
+
+            if created_at:
+                created_at = created_at.strftime(
+                    "%d-%m-%Y %I:%M %p"
+                )
+
+            messages.append({
+                "id": row[0],
+                "sender_id": row[1],
+                "sender_name": row[2],
+                "message": row[3],
+                "created_at": created_at
+            })
+
+        return {
+            "messages": messages
+        }
+
+    except Exception as e:
+
+        print(
+            "CHAT MESSAGES ERROR:",
+            e
+        )
+
+        return {
+            "error": str(e)
+        }, 500
+
+    finally:
+
+        if conn:
+            conn.close()
+
+
+# ==========================================================
+# VIDEO CONFERENCE
+# ==========================================================
+
+@app.route("/video-conference")
+def video_conference():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") not in [
+        "admin",
+        "member"
+    ]:
+        return redirect(url_for("login"))
+
+    return render_template(
+        "video_conference.html",
+        name=session.get("name"),
+        role=session.get("role")
+    )
+# ==========================================================
 # RUN APPLICATION
 # ==========================================================
 

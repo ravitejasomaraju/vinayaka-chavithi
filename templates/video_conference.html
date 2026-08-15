@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Video Conference</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .header {
+            background: linear-gradient(
+                135deg,
+                #e65100,
+                #ff9800
+            );
+
+            color: white;
+            padding: 22px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            margin: 25px auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow:
+                0 5px 20px rgba(0,0,0,0.12);
+        }
+
+        .meeting {
+            width: 100%;
+            height: 650px;
+            border: 0;
+            border-radius: 12px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 22px;
+            background: #555;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+        }
+
+        @media(max-width:700px) {
+
+            .meeting {
+                height: 600px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="header">
+
+        <h1>🎥 Vinayaka Chavithi Video Conference</h1>
+
+        <p>
+            Welcome, {{ name }}
+        </p>
+
+    </div>
+
+
+    <div class="container">
+
+        <div class="card">
+
+            <iframe
+                class="meeting"
+                src="https://meet.jit.si/VinayakaChavithiMembers2026"
+                allow="camera; microphone; fullscreen; display-capture"
+                allowfullscreen>
+            </iframe>
+
+        </div>
+
+
+        {% if role == "admin" %}
+
+        <a
+            href="{{ url_for('admin') }}"
+            class="back"
+        >
+            ← Back to Admin Dashboard
+        </a>
+
+        {% else %}
+
+        <a
+            href="{{ url_for('member') }}"
+            class="back"
+        >
+            ← Back to Member Dashboard
+        </a>
+
+        {% endif %}
+
+    </div>
+
+</body>
+
+</html>

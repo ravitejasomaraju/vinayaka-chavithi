@@ -280,6 +280,13 @@
         <a href="{{ url_for('logout') }}" class="logout-btn">
             Logout
         </a>
+        <a href="{{ url_for('member_chat') }}" class="dashboard-btn chat-btn">
+    💬 Member Chat
+</a>
+
+<a href="{{ url_for('video_conference') }}" class="dashboard-btn video-btn">
+    🎥 Video Conference
+</a>
 
     </div>
 
@@ -485,6 +492,7 @@
                     <p>
                         No donations collected yet.
                     </p>
+                   
 
                     <a
                         href="{{ url_for('collect_donation') }}"
