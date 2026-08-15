@@ -1,13 +1,20 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Admin Dashboard - Vinayaka Chavithi</title>
 
     <style>
+
         * {
             box-sizing: border-box;
         }
@@ -20,7 +27,12 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #ff6f00, #ff9800);
+            background: linear-gradient(
+                135deg,
+                #ff6f00,
+                #ff9800
+            );
+
             color: white;
             padding: 25px;
             text-align: center;
@@ -40,7 +52,8 @@
             background: white;
             padding: 22px;
             border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.08);
             margin-bottom: 25px;
         }
 
@@ -51,7 +64,8 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns:
+                repeat(4, 1fr);
             gap: 18px;
             margin-bottom: 25px;
         }
@@ -61,7 +75,8 @@
             padding: 20px;
             border-radius: 12px;
             text-align: center;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.08);
         }
 
         .stat-icon {
@@ -81,7 +96,8 @@
 
         .menu {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns:
+                repeat(2, 1fr);
             gap: 20px;
         }
 
@@ -89,7 +105,8 @@
             background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            box-shadow:
+                0 3px 12px rgba(0,0,0,0.08);
         }
 
         .menu-card h2 {
@@ -112,14 +129,6 @@
             font-weight: bold;
         }
 
-        .orange {
-            background: #ff9800;
-        }
-
-        .orange:hover {
-            background: #f57c00;
-        }
-
         .blue {
             background: #1976d2;
         }
@@ -136,11 +145,35 @@
             background: #1b5e20;
         }
 
+        .orange {
+            background: #ff9800;
+        }
+
+        .orange:hover {
+            background: #f57c00;
+        }
+
         .purple {
             background: #7b1fa2;
         }
 
         .purple:hover {
+            background: #6a1b9a;
+        }
+
+        .chat {
+            background: #0288d1;
+        }
+
+        .chat:hover {
+            background: #01579b;
+        }
+
+        .video {
+            background: #8e24aa;
+        }
+
+        .video:hover {
             background: #6a1b9a;
         }
 
@@ -166,12 +199,14 @@
         @media (max-width: 800px) {
 
             .stats {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns:
+                    repeat(2, 1fr);
             }
 
             .menu {
                 grid-template-columns: 1fr;
             }
+
         }
 
         @media (max-width: 500px) {
@@ -183,27 +218,46 @@
             .container {
                 width: 95%;
             }
+
         }
+
     </style>
+
 </head>
+
 
 <body>
 
+
     <div class="header">
-        <h1>🕉️ Vinayaka Chavithi</h1>
-        <p>Admin Dashboard</p>
+
+        <h1>
+            🕉️ Vinayaka Chavithi
+        </h1>
+
+        <p>
+            Admin Dashboard
+        </p>
+
     </div>
 
 
     <div class="container">
 
+
+        <!-- WELCOME -->
+
         <div class="welcome">
 
-            <h2>Welcome, {{ name or "Admin" }} 👋</h2>
+            <h2>
+                Welcome, {{ name or "Admin" }} 👋
+            </h2>
 
             <p>
-                Manage Vinayaka Chavithi donations, youth members,
-                programs and pooja timings from this dashboard.
+                Manage Vinayaka Chavithi donations,
+                youth members, programs, pooja timings,
+                member chat and video conferences
+                from this dashboard.
             </p>
 
         </div>
@@ -213,28 +267,72 @@
 
         <div class="stats">
 
-            <div class="stat-card">
-                <div class="stat-icon">👥</div>
-                <h3>Members</h3>
-                <p>{{ total_members or 0 }}</p>
-            </div>
 
             <div class="stat-card">
-                <div class="stat-icon">💰</div>
-                <h3>Donations</h3>
-                <p>₹{{ total_donations or 0 }}</p>
+
+                <div class="stat-icon">
+                    👥
+                </div>
+
+                <h3>
+                    Members
+                </h3>
+
+                <p>
+                    {{ total_members or 0 }}
+                </p>
+
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon">📅</div>
-                <h3>Programs</h3>
-                <p>{{ total_programs or 0 }}</p>
-            </div>
 
             <div class="stat-card">
-                <div class="stat-icon">👤</div>
-                <h3>Total Users</h3>
-                <p>{{ total_users or 0 }}</p>
+
+                <div class="stat-icon">
+                    💰
+                </div>
+
+                <h3>
+                    Donations
+                </h3>
+
+                <p>
+                    ₹{{ total_donations or 0 }}
+                </p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    📅
+                </div>
+
+                <h3>
+                    Programs
+                </h3>
+
+                <p>
+                    {{ total_programs or 0 }}
+                </p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+                    👤
+                </div>
+
+                <h3>
+                    Total Users
+                </h3>
+
+                <p>
+                    {{ total_users or 0 }}
+                </p>
+
             </div>
 
         </div>
@@ -244,15 +342,18 @@
 
         <div class="menu">
 
+
             <!-- MEMBERS -->
 
             <div class="menu-card">
 
-                <h2>👥 Youth Members</h2>
+                <h2>
+                    👥 Youth Members
+                </h2>
 
                 <p>
-                    Add and manage youth members who collect
-                    Vinayaka Chavithi donations.
+                    Add and manage youth members who
+                    collect Vinayaka Chavithi donations.
                 </p>
 
                 <a
@@ -269,11 +370,13 @@
 
             <div class="menu-card">
 
-                <h2>💰 Donations</h2>
+                <h2>
+                    💰 Donations
+                </h2>
 
                 <p>
-                    Collect donations and view the donation
-                    records.
+                    Collect donations and view,
+                    edit and delete donation records.
                 </p>
 
                 <a
@@ -282,13 +385,6 @@
                 >
                     Manage Donations
                 </a>
-                <a href="{{ url_for('member_chat') }}" class="dashboard-btn chat-btn">
-    💬 Member Chat
-</a>
-
-<a href="{{ url_for('video_conference') }}" class="dashboard-btn video-btn">
-    🎥 Video Conference
-</a>
 
             </div>
 
@@ -297,11 +393,13 @@
 
             <div class="menu-card">
 
-                <h2>🕉️ Pooja Timings</h2>
+                <h2>
+                    🕉️ Pooja Timings
+                </h2>
 
                 <p>
-                    Add, view and delete Vinayaka Chavithi
-                    pooja timings whenever you are ready.
+                    Add, view and delete Vinayaka
+                    Chavithi pooja timings.
                 </p>
 
                 <a
@@ -318,10 +416,12 @@
 
             <div class="menu-card">
 
-                <h2>📅 View Public Timings</h2>
+                <h2>
+                    📅 View Public Timings
+                </h2>
 
                 <p>
-                    View the pooja schedule that can be shown
+                    View the pooja schedule shown
                     to visitors.
                 </p>
 
@@ -334,17 +434,63 @@
 
             </div>
 
+
+            <!-- MEMBER CHAT -->
+
+            <div class="menu-card">
+
+                <h2>
+                    💬 Member Chat
+                </h2>
+
+                <p>
+                    Chat with youth members.
+                    Admin can also send and receive
+                    messages in the same chat.
+                </p>
+
+                <a
+                    href="{{ url_for('member_chat') }}"
+                    class="btn chat"
+                >
+                    💬 Open Member Chat
+                </a>
+
+            </div>
+
+
+            <!-- VIDEO CONFERENCE -->
+
+            <div class="menu-card">
+
+                <h2>
+                    🎥 Video Conference
+                </h2>
+
+                <p>
+                    Join the Vinayaka Chavithi
+                    Admin and Member video conference.
+                </p>
+
+                <a
+                    href="{{ url_for('video_conference') }}"
+                    class="btn video"
+                >
+                    🎥 Join Video Conference
+                </a>
+
+            </div>
+
+
         </div>
-<a href="{{ url_for('admin_celebrations') }}">
-    📸 Previous Celebrations
-</a>
+
 
         <!-- LOGOUT -->
 
         <div class="logout">
 
             <a
-                href="/logout"
+                href="{{ url_for('logout') }}"
                 class="btn red"
             >
                 🚪 Logout
@@ -352,12 +498,18 @@
 
         </div>
 
+
     </div>
 
 
     <div class="footer">
+
         © 2026 Vinayaka Chavithi Management System
+
     </div>
 
+
 </body>
+
 </html>
+```

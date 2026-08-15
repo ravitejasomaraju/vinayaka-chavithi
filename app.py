@@ -1,4 +1,6 @@
 import os
+from flask import Flask, render_template, request, redirect, url_for, session
+from database import get_connection
 
 from flask import (
     Flask,
@@ -429,67 +431,6 @@ def admin_members():
 
 
 # ==========================================================
-# ADMIN DELETE MEMBER
-# ==========================================================
-
-@app.route("/admin/delete-member/<int:user_id>", methods=["POST"])
-def delete_member(user_id):
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return "Unauthorized", 403
-
-    if user_id == session.get("user_id"):
-        return "Admin account cannot be deleted.", 403
-
-    conn = None
-
-    try:
-        conn = get_connection()
-
-        with conn.cursor() as cur:
-            cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
-            user = cur.fetchone()
-
-            if not user:
-                return "Member not found.", 404
-
-            if user[0] == "admin":
-                return "Admin account cannot be deleted.", 403
-
-            # Keep old donation records, but remove the deleted
-            # member reference before deleting the member account.
-            cur.execute(
-                """
-                UPDATE donations
-                SET collected_by = NULL
-                WHERE collected_by = %s
-                """,
-                (user_id,)
-            )
-
-            cur.execute(
-                "DELETE FROM users WHERE id = %s AND role = 'member'",
-                (user_id,)
-            )
-
-        conn.commit()
-        return redirect(url_for("admin_members"))
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        print("DELETE MEMBER ERROR:", e)
-        return "Delete member error: " + str(e), 500
-
-    finally:
-        if conn:
-            conn.close()
-
-
-# ==========================================================
 # MEMBER DASHBOARD
 # ==========================================================
 
@@ -567,49 +508,80 @@ def member():
 
 
 # ==========================================================
-# MEMBER COLLECT DONATION
+# DONATIONS
 # ==========================================================
 
-@app.route("/collect-donation", methods=["GET", "POST"])
-def collect_donation():
+@app.route(
+    "/donations",
+    methods=["GET", "POST"]
+)
+@app.route(
+    "/collect-donation",
+    methods=["GET", "POST"]
+)
+def donations():
 
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    if session.get("role") != "member":
-        return "Unauthorized", 403
+    if session.get("role") not in [
+        "admin",
+        "member"
+    ]:
+        return redirect(url_for("login"))
 
     message = None
     error = None
+
     conn = None
 
     try:
+
+        conn = get_connection()
+
+        # --------------------------------------------------
+        # ADD DONATION
+        # --------------------------------------------------
+
         if request.method == "POST":
 
-            donor_name = request.form.get("donor_name", "").strip()
-            phone = request.form.get("phone", "").strip()
-            amount_text = request.form.get("amount", "").strip()
-            payment_method = request.form.get("payment_method", "Cash").strip()
-            payment_status = request.form.get("payment_status", "Paid").strip()
+            donor_name = request.form.get(
+                "donor_name",
+                ""
+            ).strip()
+
+            phone = request.form.get(
+                "phone",
+                ""
+            ).strip()
+
+            amount = request.form.get(
+                "amount",
+                ""
+            ).strip()
+
+            payment_method = request.form.get(
+                "payment_method",
+                "Cash"
+            ).strip()
+
+            payment_status = request.form.get(
+                "payment_status",
+                "Paid"
+            ).strip()
 
             if not donor_name:
+
                 error = "Donor name is required."
 
-            elif not amount_text:
+            elif not amount:
+
                 error = "Donation amount is required."
 
             else:
-                try:
-                    amount = float(amount_text)
-                    if amount <= 0:
-                        raise ValueError
-                except (TypeError, ValueError):
-                    error = "Enter a valid donation amount greater than 0."
-
-            if not error:
-                conn = get_connection()
 
                 with conn.cursor() as cur:
+
                     cur.execute(
                         """
                         INSERT INTO donations
@@ -621,7 +593,15 @@ def collect_donation():
                             payment_status,
                             collected_by
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s)
+                        VALUES
+                        (
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s,
+                            %s
+                        )
                         """,
                         (
                             donor_name,
@@ -635,50 +615,13 @@ def collect_donation():
 
                 conn.commit()
 
-                return redirect(url_for("member"))
+                message = (
+                    "Donation added successfully!"
+                )
 
-        return render_template(
-            "collect_donation.html",
-            message=message,
-            error=error
-        )
-
-    except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print("COLLECT DONATION ERROR:", e)
-
-        return render_template(
-            "collect_donation.html",
-            message=None,
-            error="Could not save donation: " + str(e)
-        )
-
-    finally:
-
-        if conn:
-            conn.close()
-
-
-# ==========================================================
-# ADMIN MANAGE DONATIONS
-# ==========================================================
-
-@app.route("/admin/donations")
-def admin_donations():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return "Unauthorized", 403
-
-    conn = None
-
-    try:
-        conn = get_connection()
+        # --------------------------------------------------
+        # GET DONATIONS
+        # --------------------------------------------------
 
         with conn.cursor() as cur:
 
@@ -692,7 +635,7 @@ def admin_donations():
                     d.payment_method,
                     d.payment_status,
                     d.donated_at,
-                    COALESCE(u.name, 'Deleted Member')
+                    u.name
                 FROM donations d
                 LEFT JOIN users u
                     ON d.collected_by = u.id
@@ -716,142 +659,27 @@ def admin_donations():
             "donations.html",
             donations=donation_list,
             total_collection=total_collection,
-            admin_mode=True
+            message=message,
+            error=error
         )
 
     except Exception as e:
 
-        print("ADMIN DONATIONS ERROR:", e)
-
-        return "Admin donations error: " + str(e), 500
-
-    finally:
-
-        if conn:
-            conn.close()
-
-
-# ==========================================================
-# ADMIN EDIT DONATION
-# ==========================================================
-
-@app.route("/admin/donations/edit/<int:donation_id>", methods=["GET", "POST"])
-def edit_donation(donation_id):
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return "Unauthorized", 403
-
-    conn = None
-
-    try:
-        conn = get_connection()
-
-        if request.method == "POST":
-            donor_name = request.form.get("donor_name", "").strip()
-            phone = request.form.get("phone", "").strip()
-            amount = request.form.get("amount", "").strip()
-            payment_method = request.form.get("payment_method", "Cash").strip()
-            payment_status = request.form.get("payment_status", "Paid").strip()
-
-            if not donor_name or not amount:
-                return render_template("edit_donation.html", donation=None,
-                                       error="Donor name and amount are required.")
-
-            try:
-                amount_value = float(amount)
-                if amount_value <= 0:
-                    raise ValueError
-            except ValueError:
-                return render_template("edit_donation.html", donation=None,
-                                       error="Enter a valid amount greater than 0.")
-
-            with conn.cursor() as cur:
-                cur.execute("""
-                    UPDATE donations
-                    SET donor_name=%s, phone=%s, amount=%s,
-                        payment_method=%s, payment_status=%s
-                    WHERE id=%s
-                """, (donor_name, phone, amount_value, payment_method,
-                      payment_status, donation_id))
-
-                if cur.rowcount == 0:
-                    conn.rollback()
-                    return "Donation not found.", 404
-
-            conn.commit()
-            return redirect(url_for("admin_donations"))
-
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT id, donor_name, phone, amount,
-                       payment_method, payment_status, donated_at
-                FROM donations
-                WHERE id=%s
-            """, (donation_id,))
-            donation = cur.fetchone()
-
-        if not donation:
-            return "Donation not found.", 404
-
-        return render_template("edit_donation.html",
-                               donation=donation, error=None)
-
-    except Exception as e:
         if conn:
             conn.rollback()
-        print("EDIT DONATION ERROR:", e)
-        return "Edit donation error: " + str(e), 500
+
+        print(
+            "DONATION ERROR:",
+            e
+        )
+
+        return (
+            "Donation error: "
+            + str(e)
+        )
 
     finally:
-        if conn:
-            conn.close()
 
-
-# ==========================================================
-# ADMIN DELETE DONATION
-# ==========================================================
-
-@app.route("/admin/donations/delete/<int:donation_id>", methods=["POST"])
-def delete_donation(donation_id):
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return "Unauthorized", 403
-
-    conn = None
-
-    try:
-        conn = get_connection()
-
-        with conn.cursor() as cur:
-            cur.execute(
-                "SELECT id FROM donations WHERE id=%s",
-                (donation_id,)
-            )
-
-            if cur.fetchone() is None:
-                return "Donation not found.", 404
-
-            cur.execute(
-                "DELETE FROM donations WHERE id=%s",
-                (donation_id,)
-            )
-
-        conn.commit()
-        return redirect(url_for("admin_donations"))
-
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        print("DELETE DONATION ERROR:", e)
-        return "Delete donation error: " + str(e), 500
-
-    finally:
         if conn:
             conn.close()
 
@@ -1134,395 +962,45 @@ def public_pooja_timings():
         if conn:
             conn.close()
 
-
-# ==========================================================
-# LOGOUT
-# ==========================================================
-
-@app.route("/logout")
-def logout():
-
-    session.clear()
-
-    return redirect(
-        url_for("login")
-    )
-
-# ==========================================================
-# PREVIOUS YEAR CELEBRATIONS - ADMIN
-# ==========================================================
-
-@app.route("/admin/celebrations", methods=["GET", "POST"])
-def admin_celebrations():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
+@app.route('/admin/delete-member/<int:user_id>', methods=['POST'])
+def delete_member(user_id):
+    if session.get('role') != 'admin':
         return "Unauthorized", 403
 
-    conn = None
-    message = None
-    error = None
+    conn = get_connection()
 
     try:
-        conn = get_connection()
-
-        # ------------------------------------------
-        # ADD CELEBRATION
-        # ------------------------------------------
-        if request.method == "POST":
-
-            year = request.form.get("year", "").strip()
-            title = request.form.get("title", "").strip()
-            description = request.form.get("description", "").strip()
-            video_url = request.form.get("video_url", "").strip()
-            image_url = request.form.get("image_url", "").strip()
-
-            if not year or not title:
-                error = "Year and title are required."
-
-            elif not video_url:
-                error = "Google Drive video link is required."
-
-            else:
-
-                # Convert Google Drive sharing URL
-                # into an embeddable URL
-                if "/file/d/" in video_url:
-
-                    try:
-                        file_id = video_url.split("/file/d/")[1].split("/")[0]
-
-                        video_url = (
-                            "https://drive.google.com/file/d/"
-                            + file_id
-                            + "/preview"
-                        )
-
-                    except Exception:
-                        error = "Invalid Google Drive video link."
-
-                if not error:
-
-                    with conn.cursor() as cur:
-
-                        cur.execute("""
-                            INSERT INTO previous_celebrations
-                            (
-                                year,
-                                title,
-                                description,
-                                image_url,
-                                video_url
-                            )
-                            VALUES (%s, %s, %s, %s, %s)
-                        """, (
-                            int(year),
-                            title,
-                            description,
-                            image_url,
-                            video_url
-                        ))
-
-                    conn.commit()
-
-                    message = "Celebration added successfully."
-
-        # ------------------------------------------
-        # GET ALL CELEBRATIONS
-        # ------------------------------------------
-
         with conn.cursor() as cur:
+            cur.execute(
+                "SELECT role FROM users WHERE id = %s",
+                (user_id,)
+            )
+            user = cur.fetchone()
 
-            cur.execute("""
-                SELECT
-                    id,
-                    year,
-                    title,
-                    description,
-                    image_url,
-                    video_url,
-                    created_at
-                FROM previous_celebrations
-                ORDER BY year DESC, id DESC
-            """)
+            if not user:
+                return "Member not found", 404
 
-            celebrations = cur.fetchall()
+            if user[0] == 'admin':
+                return "Admin account cannot be deleted", 403
 
-        return render_template(
-            "admin_celebrations.html",
-            celebrations=celebrations,
-            message=message,
-            error=error
-        )
-
-    except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print("CELEBRATIONS ERROR:", e)
-
-        return "Celebrations error: " + str(e)
-
-    finally:
-
-        if conn:
-            conn.close()
-
-
-# ==========================================================
-# DELETE PREVIOUS CELEBRATION
-# ==========================================================
-
-@app.route(
-    "/admin/celebrations/delete/<int:celebration_id>",
-    methods=["POST"]
-)
-def delete_celebration(celebration_id):
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return "Unauthorized", 403
-
-    conn = None
-
-    try:
-
-        conn = get_connection()
-
-        with conn.cursor() as cur:
-
-            cur.execute("""
-                DELETE FROM previous_celebrations
-                WHERE id = %s
-            """, (celebration_id,))
+            cur.execute(
+                "DELETE FROM users WHERE id = %s AND role = 'member'",
+                (user_id,)
+            )
 
         conn.commit()
-
-        return redirect(
-            url_for("admin_celebrations")
-        )
+        return redirect(url_for('admin_dashboard'))
 
     except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print("DELETE CELEBRATION ERROR:", e)
-
-        return "Delete celebration error: " + str(e)
+        conn.rollback()
+        print("DELETE MEMBER ERROR:", e)
+        return "Database error", 500
 
     finally:
+        conn.close()
 
-        if conn:
-            conn.close()
-
-@app.route("/previous-celebrations")
-def previous_celebrations():
-
-    conn = None
-
-    try:
-        conn = get_connection()
-
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT
-                    id,
-                    year,
-                    title,
-                    description,
-                    image_url,
-                    video_url,
-                    created_at
-                FROM previous_celebrations
-                ORDER BY year DESC, id DESC
-            """)
-
-            celebrations = cur.fetchall()
-
-        return render_template(
-            "previous_celebrations.html",
-            celebrations=celebrations
-        )
-
-    except Exception as e:
-        print("PUBLIC CELEBRATIONS ERROR:", e)
-        return "Previous celebrations error: " + str(e)
-
-    finally:
-        if conn:
-            conn.close()
-@app.route("/member/chat/messages")
-def member_chat_messages():
-
-    if "user_id" not in session:
-        return {"error": "Not logged in"}, 401
-
-    if session.get("role") != "member":
-        return {"error": "Unauthorized"}, 403
-
-    conn = None
-
-    try:
-        conn = get_connection()
-
-        with conn.cursor() as cur:
-            cur.execute("""
-                SELECT
-                    id,
-                    sender_id,
-                    sender_name,
-                    message,
-                    created_at
-                FROM member_messages
-                ORDER BY created_at ASC
-            """)
-
-            rows = cur.fetchall()
-
-        messages = []
-
-        for row in rows:
-            messages.append({
-                "id": row[0],
-                "sender_id": row[1],
-                "sender_name": row[2],
-                "message": row[3],
-                "created_at": row[4].strftime(
-                    "%d-%m-%Y %I:%M %p"
-                )
-            })
-
-        return {
-            "messages": messages
-        }
-
-    except Exception as e:
-
-        print("CHAT MESSAGES ERROR:", e)
-
-        return {
-            "error": str(e)
-        }, 500
-
-    finally:
-
-        if conn:
-            conn.close()
 # ==========================================================
-# MEMBER CHAT
-# ==========================================================
-
-@app.route("/member/chat", methods=["GET", "POST"])
-def member_chat():
-
-    # Member must be logged in
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    # Only members can access chat
-    if session.get("role") != "member":
-        return "Unauthorized", 403
-
-    conn = None
-
-    try:
-        conn = get_connection()
-
-        # --------------------------------------------------
-        # SEND MESSAGE
-        # --------------------------------------------------
-        if request.method == "POST":
-
-            message = request.form.get("message", "").strip()
-
-            if message:
-
-                user_id = session.get("user_id")
-                user_name = session.get("name", "Member")
-
-                with conn.cursor() as cur:
-
-                    cur.execute("""
-                        INSERT INTO member_messages
-                        (
-                            sender_id,
-                            sender_name,
-                            message
-                        )
-                        VALUES (%s, %s, %s)
-                    """, (
-                        user_id,
-                        user_name,
-                        message
-                    ))
-
-                conn.commit()
-
-                return redirect(url_for("member_chat"))
-
-        # --------------------------------------------------
-        # GET MESSAGES
-        # --------------------------------------------------
-
-        with conn.cursor() as cur:
-
-            cur.execute("""
-                SELECT
-                    id,
-                    sender_id,
-                    sender_name,
-                    message,
-                    created_at
-                FROM member_messages
-                ORDER BY created_at ASC
-            """)
-
-            messages = cur.fetchall()
-
-        return render_template(
-            "member_chat.html",
-            messages=messages
-        )
-
-    except Exception as e:
-
-        if conn:
-            conn.rollback()
-
-        print("MEMBER CHAT ERROR:", e)
-
-        return "Member chat error: " + str(e)
-
-    finally:
-
-        if conn:
-            conn.close()
-# ==========================================================
-# VIDEO CONFERENCE
-# ==========================================================
-
-@app.route("/video-conference")
-def video_conference():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") not in ["admin", "member"]:
-        return redirect(url_for("login"))
-
-    return render_template(
-        "video_conference.html",
-        name=session.get("name"),
-        role=session.get("role")
-    )
-# ==========================================================
-# MEMBER CHAT - ADMIN + MEMBERS
+# SHARED MEMBER CHAT - ADMIN + MEMBERS
 # ==========================================================
 
 @app.route("/member/chat", methods=["GET", "POST"])
@@ -1538,10 +1016,6 @@ def member_chat():
 
     try:
         conn = get_connection()
-
-        # --------------------------------------------------
-        # SEND MESSAGE
-        # --------------------------------------------------
 
         if request.method == "POST":
 
@@ -1553,13 +1027,9 @@ def member_chat():
             if message:
 
                 user_id = session["user_id"]
-                user_name = session.get(
-                    "name",
-                    "User"
-                )
+                user_name = session.get("name", "User")
 
                 with conn.cursor() as cur:
-
                     cur.execute(
                         """
                         INSERT INTO member_messages
@@ -1568,8 +1038,7 @@ def member_chat():
                             sender_name,
                             message
                         )
-                        VALUES
-                        (%s, %s, %s)
+                        VALUES (%s, %s, %s)
                         """,
                         (
                             user_id,
@@ -1580,16 +1049,9 @@ def member_chat():
 
                 conn.commit()
 
-            return redirect(
-                url_for("member_chat")
-            )
-
-        # --------------------------------------------------
-        # GET MESSAGES
-        # --------------------------------------------------
+            return redirect(url_for("member_chat"))
 
         with conn.cursor() as cur:
-
             cur.execute(
                 """
                 SELECT
@@ -1615,15 +1077,9 @@ def member_chat():
         if conn:
             conn.rollback()
 
-        print(
-            "MEMBER CHAT ERROR:",
-            e
-        )
+        print("MEMBER CHAT ERROR:", e)
 
-        return (
-            "Member chat error: "
-            + str(e)
-        )
+        return "Member chat error: " + str(e)
 
     finally:
 
@@ -1639,17 +1095,10 @@ def member_chat():
 def member_chat_messages():
 
     if "user_id" not in session:
-        return {
-            "error": "Not logged in"
-        }, 401
+        return {"error": "Not logged in"}, 401
 
-    if session.get("role") not in [
-        "admin",
-        "member"
-    ]:
-        return {
-            "error": "Unauthorized"
-        }, 403
+    if session.get("role") not in ["admin", "member"]:
+        return {"error": "Unauthorized"}, 403
 
     conn = None
 
@@ -1658,7 +1107,6 @@ def member_chat_messages():
         conn = get_connection()
 
         with conn.cursor() as cur:
-
             cur.execute(
                 """
                 SELECT
@@ -1693,20 +1141,13 @@ def member_chat_messages():
                 "created_at": created_at
             })
 
-        return {
-            "messages": messages
-        }
+        return {"messages": messages}
 
     except Exception as e:
 
-        print(
-            "CHAT MESSAGES ERROR:",
-            e
-        )
+        print("CHAT MESSAGES ERROR:", e)
 
-        return {
-            "error": str(e)
-        }, 500
+        return {"error": str(e)}, 500
 
     finally:
 
@@ -1715,7 +1156,7 @@ def member_chat_messages():
 
 
 # ==========================================================
-# VIDEO CONFERENCE
+# VIDEO CONFERENCE - ADMIN + MEMBERS
 # ==========================================================
 
 @app.route("/video-conference")
@@ -1724,10 +1165,7 @@ def video_conference():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
-    if session.get("role") not in [
-        "admin",
-        "member"
-    ]:
+    if session.get("role") not in ["admin", "member"]:
         return redirect(url_for("login"))
 
     return render_template(
@@ -1735,6 +1173,22 @@ def video_conference():
         name=session.get("name"),
         role=session.get("role")
     )
+
+
+# ==========================================================
+# LOGOUT
+# ==========================================================
+
+@app.route("/logout")
+def logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("login")
+    )
+
+
 # ==========================================================
 # RUN APPLICATION
 # ==========================================================
