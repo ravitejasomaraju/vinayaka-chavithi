@@ -808,9 +808,14 @@ def edit_donation(donation_id):
 # ADMIN DELETE DONATION
 # ==========================================================
 
+# ==========================================================
+# ADMIN DELETE DONATION
+# ==========================================================
+
 @app.route("/admin/donations/delete/<int:donation_id>", methods=["POST"])
 def delete_donation(donation_id):
 
+    # Only logged-in admin can delete donations
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -823,6 +828,24 @@ def delete_donation(donation_id):
         conn = get_connection()
 
         with conn.cursor() as cur:
+
+            # Check that donation exists first
+            cur.execute(
+                """
+                SELECT id, donor_name, amount
+                FROM donations
+                WHERE id = %s
+                """,
+                (donation_id,)
+            )
+
+            donation = cur.fetchone()
+
+            if donation is None:
+                conn.rollback()
+                return "Donation not found.", 404
+
+            # Delete the donation
             cur.execute(
                 """
                 DELETE FROM donations
@@ -831,10 +854,7 @@ def delete_donation(donation_id):
                 (donation_id,)
             )
 
-            if cur.rowcount == 0:
-                conn.rollback()
-                return "Donation not found.", 404
-
+        # Save deletion
         conn.commit()
 
         return redirect(url_for("donations"))
@@ -844,40 +864,17 @@ def delete_donation(donation_id):
         if conn:
             conn.rollback()
 
-        print("DELETE DONATION ERROR:", e)
-        return "Delete donation error: " + str(e), 500
+        print("DELETE DONATION ERROR:", repr(e))
+
+        return (
+            "Unable to delete donation.<br><br>"
+            "Error: " + str(e)
+        ), 500
 
     finally:
 
         if conn:
             conn.close()
-
-
-# ==========================================================
-# ADMIN POOJA TIMINGS
-# ==========================================================
-
-@app.route(
-    "/admin/pooja-timings",
-    methods=["GET", "POST"]
-)
-def admin_pooja_timings():
-
-    if "user_id" not in session:
-        return redirect(url_for("login"))
-
-    if session.get("role") != "admin":
-        return redirect(url_for("login"))
-
-    message = None
-    error = None
-
-    conn = None
-
-    try:
-
-        conn = get_connection()
-
         # --------------------------------------------------
         # ADD POOJA TIMING
         # --------------------------------------------------
