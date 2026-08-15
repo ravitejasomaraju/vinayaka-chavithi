@@ -429,6 +429,63 @@ def admin_members():
 
 
 # ==========================================================
+# ADMIN DELETE MEMBER
+# ==========================================================
+
+@app.route("/admin/delete-member/<int:user_id>", methods=["POST"])
+def delete_member(user_id):
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        return "Unauthorized", 403
+
+    if user_id == session.get("user_id"):
+        return "Admin account cannot be deleted.", 403
+
+    conn = None
+
+    try:
+        conn = get_connection()
+
+        with conn.cursor() as cur:
+            cur.execute("SELECT role FROM users WHERE id = %s", (user_id,))
+            user = cur.fetchone()
+
+            if not user:
+                return "Member not found.", 404
+
+            if user[0] == "admin":
+                return "Admin account cannot be deleted.", 403
+
+            cur.execute(
+                "SELECT COUNT(*) FROM donations WHERE collected_by = %s",
+                (user_id,)
+            )
+            if cur.fetchone()[0] > 0:
+                return "Cannot delete this member because donation records are linked to this account.", 409
+
+            cur.execute(
+                "DELETE FROM users WHERE id = %s AND role = 'member'",
+                (user_id,)
+            )
+
+        conn.commit()
+        return redirect(url_for("admin_members"))
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print("DELETE MEMBER ERROR:", e)
+        return "Delete member error: " + str(e), 500
+
+    finally:
+        if conn:
+            conn.close()
+
+
+# ==========================================================
 # MEMBER DASHBOARD
 # ==========================================================
 
@@ -701,105 +758,62 @@ def edit_donation(donation_id):
         conn = get_connection()
 
         if request.method == "POST":
-
             donor_name = request.form.get("donor_name", "").strip()
             phone = request.form.get("phone", "").strip()
             amount = request.form.get("amount", "").strip()
             payment_method = request.form.get("payment_method", "Cash").strip()
             payment_status = request.form.get("payment_status", "Paid").strip()
 
-            if not donor_name:
-                return render_template(
-                    "edit_donation.html",
-                    donation=None,
-                    error="Donor name is required."
-                )
-
-            if not amount:
-                return render_template(
-                    "edit_donation.html",
-                    donation=None,
-                    error="Amount is required."
-                )
+            if not donor_name or not amount:
+                return render_template("edit_donation.html", donation=None,
+                                       error="Donor name and amount are required.")
 
             try:
                 amount_value = float(amount)
-                if amount_value < 0:
+                if amount_value <= 0:
                     raise ValueError
             except ValueError:
-                return render_template(
-                    "edit_donation.html",
-                    donation=None,
-                    error="Enter a valid donation amount."
-                )
+                return render_template("edit_donation.html", donation=None,
+                                       error="Enter a valid amount greater than 0.")
 
             with conn.cursor() as cur:
-                cur.execute(
-                    """
+                cur.execute("""
                     UPDATE donations
-                    SET donor_name = %s,
-                        phone = %s,
-                        amount = %s,
-                        payment_method = %s,
-                        payment_status = %s
-                    WHERE id = %s
-                    """,
-                    (
-                        donor_name,
-                        phone,
-                        amount_value,
-                        payment_method,
-                        payment_status,
-                        donation_id
-                    )
-                )
+                    SET donor_name=%s, phone=%s, amount=%s,
+                        payment_method=%s, payment_status=%s
+                    WHERE id=%s
+                """, (donor_name, phone, amount_value, payment_method,
+                      payment_status, donation_id))
 
                 if cur.rowcount == 0:
                     conn.rollback()
                     return "Donation not found.", 404
 
             conn.commit()
-
             return redirect(url_for("donations"))
 
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT
-                    id,
-                    donor_name,
-                    phone,
-                    amount,
-                    payment_method,
-                    payment_status,
-                    donated_at
+            cur.execute("""
+                SELECT id, donor_name, phone, amount,
+                       payment_method, payment_status, donated_at
                 FROM donations
-                WHERE id = %s
-                """,
-                (donation_id,)
-            )
-
+                WHERE id=%s
+            """, (donation_id,))
             donation = cur.fetchone()
 
         if not donation:
             return "Donation not found.", 404
 
-        return render_template(
-            "edit_donation.html",
-            donation=donation,
-            error=None
-        )
+        return render_template("edit_donation.html",
+                               donation=donation, error=None)
 
     except Exception as e:
-
         if conn:
             conn.rollback()
-
         print("EDIT DONATION ERROR:", e)
         return "Edit donation error: " + str(e), 500
 
     finally:
-
         if conn:
             conn.close()
 
@@ -808,14 +822,9 @@ def edit_donation(donation_id):
 # ADMIN DELETE DONATION
 # ==========================================================
 
-# ==========================================================
-# ADMIN DELETE DONATION
-# ==========================================================
-
 @app.route("/admin/donations/delete/<int:donation_id>", methods=["POST"])
 def delete_donation(donation_id):
 
-    # Only logged-in admin can delete donations
     if "user_id" not in session:
         return redirect(url_for("login"))
 
@@ -828,53 +837,58 @@ def delete_donation(donation_id):
         conn = get_connection()
 
         with conn.cursor() as cur:
-
-            # Check that donation exists first
             cur.execute(
-                """
-                SELECT id, donor_name, amount
-                FROM donations
-                WHERE id = %s
-                """,
+                "SELECT id FROM donations WHERE id=%s",
                 (donation_id,)
             )
 
-            donation = cur.fetchone()
-
-            if donation is None:
-                conn.rollback()
+            if cur.fetchone() is None:
                 return "Donation not found.", 404
 
-            # Delete the donation
             cur.execute(
-                """
-                DELETE FROM donations
-                WHERE id = %s
-                """,
+                "DELETE FROM donations WHERE id=%s",
                 (donation_id,)
             )
 
-        # Save deletion
         conn.commit()
-
         return redirect(url_for("donations"))
 
     except Exception as e:
-
         if conn:
             conn.rollback()
-
-        print("DELETE DONATION ERROR:", repr(e))
-
-        return (
-            "Unable to delete donation.<br><br>"
-            "Error: " + str(e)
-        ), 500
+        print("DELETE DONATION ERROR:", e)
+        return "Delete donation error: " + str(e), 500
 
     finally:
-
         if conn:
             conn.close()
+
+
+# ==========================================================
+# ADMIN POOJA TIMINGS
+# ==========================================================
+
+@app.route(
+    "/admin/pooja-timings",
+    methods=["GET", "POST"]
+)
+def admin_pooja_timings():
+
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    if session.get("role") != "admin":
+        return redirect(url_for("login"))
+
+    message = None
+    error = None
+
+    conn = None
+
+    try:
+
+        conn = get_connection()
+
         # --------------------------------------------------
         # ADD POOJA TIMING
         # --------------------------------------------------
